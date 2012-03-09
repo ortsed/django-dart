@@ -1,21 +1,29 @@
 (function($){
-     $(function(){
-
-		if (typeof(CKEDITOR) != "undefined"){
-			CKEDITOR.replace("id_embed", {
-				"filebrowserWindowWidth": 940, 
-				"filebrowserBrowseUrl": "/admin/filebrowser/browse/?pop=3&type=Image", 
-				"filebrowserUploadUrl": "/ckeditor/upload/", 
-				"height": 150, 
-				"width": 760, 
-				"skin": "kama", 
-				"filebrowserWindowHeight": 147, 
-				"toolbar": [ ["Source", "Bold", "Italic", "Font", "FontSize", "Strike", "Subscript", "Superscript", "RemoveFormat" , "Link", "Unlink", "Anchor"] ],
-				"autoParagraph":false,
-				"enterMode" : CKEDITOR.ENTER_BR
-			});
+	$(function(){
+	
+		function toggle_section(){
+			if ($("#id_type option:selected").val() == 0){
+				$(".custom-code").removeClass("closed");
+				$(".image-url").addClass("closed");
+			}else {
+				$(".custom-code").addClass("closed");
+				$(".image-url").removeClass("closed");
+			}
 		}
 		
-
-     });
+		$("#id_type").change(toggle_section);
+		toggle_section();
+		
+		
+		$("#id_load_template").change(function(){
+		
+			if ($("#id_load_template option:selected").val() != ""){
+				if (confirm('Overwrite custom ad code?')){
+					$.get("/ajax/admin/dart/template/" + $("#id_load_template option:selected").val(), {}, function(data){
+						$("#cke_contents_id_embed iframe").contents().find("body").html(eval(data)[0].fields.template);
+					});
+				}
+			}
+		});
+	});
 }(django.jQuery));

@@ -28,6 +28,10 @@ STANDARD_AD_SIZES = (
 	(18, "Half-Page | 300x600")
 )
 
+CUSTOM_AD_TYPES = (
+	(0, "Custom HTML"),
+	(1, "Image/URL")
+)
 
 class Position(models.Model):
 
@@ -61,18 +65,21 @@ class Zone(models.Model):
 	def __unicode__(self):
 		return u"%s" % self.name		
 
-
 class Custom_Ad(models.Model):
 
 	name = models.CharField(max_length=255, default="")
 	
 	slug = models.CharField(max_length=255)
 	
+	type =  models.IntegerField(choices=CUSTOM_AD_TYPES, default=0)
+	
 	url = models.URLField(null=True, blank=True, help_text="Click tag link")
 	
 	image = models.ImageField(null=True, blank=True, upload_to=UPLOAD_PATH + "custom_ads", help_text="Image for custom ad")
 	
 	embed = RichTextField(null=True, blank=True)
+	
+	load_template = models.ForeignKey("Custom_Ad_Template", blank=True, default=None, help_text="Load HTML code into the embed field from a pre-defined template")
 	
 	text_version = models.TextField(blank=True, help_text="Text version of ad for newsletters or Javascript disabled browsers")
 
@@ -82,6 +89,21 @@ class Custom_Ad(models.Model):
 		
 	def __unicode__(self):
 		return u"%s" % self.name
+		
+class Custom_Ad_Template(models.Model):
+	""" Templates for creating custom ads """
+	class Meta:
+		verbose_name = "Custom Ad Template"
+		verbose_name_plural = "Custom Ad Templates"
+		
+	name = models.CharField(max_length=255, default="")
+	
+	template = RichTextField(null=True, blank=True)
+
+	def __unicode__(self):
+		return u"%s" % self.name
+
+	
 
 class Zone_Position(models.Model):
 
