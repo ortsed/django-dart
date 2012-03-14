@@ -76,6 +76,7 @@ class Custom_Ad_Admin(admin.ModelAdmin):
 			"fields": ("url", "image")
 		}),
 		("Text Version", {
+			"description": "Text version of the ad for non-HTML/JS browsers and newsletters",
 			"classes": ("sizes",),
 			"fields": ("text_version",)
 		}),
