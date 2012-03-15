@@ -1,10 +1,7 @@
 from django.contrib import admin
 from settings import ADMIN_MEDIA_PREFIX
 from dart.models import Zone, Position, Custom_Ad, Custom_Ad_Template, Zone_Position
-from django.core.urlresolvers import reverse
-from django.utils.functional import lazy
-
-reverse_lazy = lazy(reverse, str)
+from settings import STATIC_URL
 
 
 class Zone_PositionInline(admin.TabularInline):
@@ -37,7 +34,7 @@ class Position_Admin(admin.ModelAdmin):
 	class Media:
 		
 		js = (
-			reverse_lazy("dart_static", args=("position.js",)),
+			STATIC_URL + "admin/dart/js/position.js",
 		)
 	
 	fieldsets = (
@@ -59,7 +56,7 @@ class Custom_Ad_Admin(admin.ModelAdmin):
 	class Media:
 		
 		js = (
-			reverse_lazy("dart_static", args=("custom_ad.js",)),
+			STATIC_URL + "admin/dart/js/custom_ad.js",
 		)
 	fieldsets = (
 		(None, {
