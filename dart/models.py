@@ -79,7 +79,7 @@ class Custom_Ad(models.Model):
 	
 	embed = RichTextField(null=True, blank=True)
 	
-	load_template = models.ForeignKey("Custom_Ad_Template", blank=True, default=None, help_text="Load HTML code into the embed field from a pre-defined template")
+	load_template = models.ForeignKey("Custom_Ad_Template", null=True, blank=True, default=None, help_text="Load HTML code into the embed field from a pre-defined template")
 	
 	text_version = models.TextField(blank=True, help_text="Text version of ad for newsletters or Javascript disabled browsers")
 
