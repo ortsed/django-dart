@@ -19,7 +19,7 @@
 		
 			if ($("#id_load_template option:selected").val() != ""){
 				if (confirm('Overwrite custom ad code?')){
-					$.get("/ajax/admin/dart/template/" + $("#id_load_template option:selected").val(), {}, function(data){
+					$.get("/ajax/admin/dart/template/" + $("#id_load_template option:selected").val() + "/", {}, function(data){
 						$("#cke_contents_id_embed iframe").contents().find("body").html(eval(data)[0].fields.template);
 					});
 				}
