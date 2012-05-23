@@ -1,5 +1,5 @@
 from django.contrib import admin
-from settings import ADMIN_MEDIA_PREFIX
+from settings import ADMIN_MEDIA_PREFIX, STANDARD_ADMIN_MEDIA_PREFIX
 from dart.models import Zone, Position, Custom_Ad, Custom_Ad_Template, Zone_Position
 from settings import STATIC_URL
 
@@ -34,7 +34,7 @@ class Position_Admin(admin.ModelAdmin):
 	class Media:
 		
 		js = (
-			ADMIN_MEDIA_PREFIX + "dart/js/position.js",
+			STANDARD_ADMIN_MEDIA_PREFIX + "dart/js/position.js",
 		)
 	
 	fieldsets = (
@@ -57,7 +57,7 @@ class Custom_Ad_Admin(admin.ModelAdmin):
 	class Media:
 		
 		js = (
-			ADMIN_MEDIA_PREFIX + "dart/js/custom_ad.js",
+			STANDARD_ADMIN_MEDIA_PREFIX + "dart/js/custom_ad.js",
 		)
 	fieldsets = (
 		(None, {
