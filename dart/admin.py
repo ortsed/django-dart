@@ -34,7 +34,7 @@ class Position_Admin(admin.ModelAdmin):
 	class Media:
 		
 		js = (
-			STATIC_URL + "admin/dart/js/position.js",
+			ADMIN_MEDIA_PREFIX + "dart/js/position.js",
 		)
 	
 	fieldsets = (
@@ -52,11 +52,12 @@ class Custom_Ad_Template_Admin(admin.ModelAdmin):
 	
 class Custom_Ad_Admin(admin.ModelAdmin):
 	prepopulated_fields = {"slug" : ('name',)}
-		
+	search_fields = ['name', ]
+	
 	class Media:
 		
 		js = (
-			STATIC_URL + "admin/dart/js/custom_ad.js",
+			ADMIN_MEDIA_PREFIX + "dart/js/custom_ad.js",
 		)
 	fieldsets = (
 		(None, {
