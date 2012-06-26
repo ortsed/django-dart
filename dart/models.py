@@ -265,7 +265,7 @@ class Ad_Page(object):
 			
 			
 		
-	def get(self, pos, ad=None, disable_ad_manager=None, custom_only=False, **kwargs):
+	def get(self, pos, ad=None, enable_ad_manager=None, custom_only=False, **kwargs):
 		""" Main class to get ad tag """
 		""" 
 		Configuration variables used in this function:
@@ -283,7 +283,7 @@ class Ad_Page(object):
 
 		# If ad manager is disabled, it goes straight to displaying the iframe/js code
 
-		if self.disable_ad_manager and not disable_ad_manager:	
+		if self.disable_ad_manager and not enable_ad_manager:	
 			return self._render_default(pos, **kwargs)
 		else:
 			if not ad:
