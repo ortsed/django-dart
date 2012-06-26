@@ -127,19 +127,30 @@ class Ad_Page(object):
 	
 	attributes = {}
 	_tile = 0
-	disable_ad_manager = False
+	site = None
+	zone = None
+	default_render_js = True
+	disable_ad_manager = True
 
-	def __init__(self, settings={}, site=None, zone=None, disable_ad_manager=None, *args, **kwargs):
-
+	def __init__(self, settings={}, site=None, zone=None, default_render_js=None, disable_ad_manager=None, *args, **kwargs):
+		""" Updates default ad page attributes
+			site - DART site 
+			zone - DART zone
+			default_render_js - render DART javascript by default, otherwise blank
+			disable_ad_manager - Turn off ad management
+			
+			Kwargs are passed to DART string. Can be any key, value pair
+			
+		"""
 		for setting in settings:
 			self.__setattr__(setting, settings[setting])
-			
+		
 		if site: self.site = site
-		
 		if zone: self.zone = zone
-		
+		if default_render_js: self.default_render_js = default_render_js
 		if disable_ad_manager: self.disable_ad_manager = disable_ad_manager
-		self.attributes.update(kwargs)
+	
+		self.attributes.update(**kwargs)
 		
 		
 			
@@ -194,24 +205,6 @@ class Ad_Page(object):
 		except:
 			return None
 			
-	def _render_js_ad(self, pos, size="0x0", template="dart/ad.html", desc_text="", **kwargs):
-		
-		self.attributes["pos"] = pos
-		self.attributes["sz"] = size
-		link = self.get_link(**kwargs)
-		
-		context_vars = {
-			"pos": pos,
-			"link": link,
-			"tile": self.tile(),
-			"desc_text": desc_text
-		}
-		context_vars.update(kwargs)
-		
-		t = loader.get_template(template)
-		c = Context(context_vars)
-		return t.render(c)
-
 	def _iframe_url(self, pos, size, **kwargs):
 		
 		self.attributes["pos"] = pos
@@ -243,17 +236,45 @@ class Ad_Page(object):
 				"desc_text": desc_text
 			})
 			return t.render(c)
-	
-	def get(self, pos, ad=None, custom_only=False, **kwargs):
+			
+	def _render_js_ad(self, pos, size="0x0", template="dart/ad.html", desc_text="", **kwargs):
+		
+		self.attributes["pos"] = pos
+		self.attributes["sz"] = size
+		link = self.get_link(**kwargs)
+		
+		context_vars = {
+			"pos": pos,
+			"link": link,
+			"tile": self.tile(),
+			"desc_text": desc_text
+		}
+		context_vars.update(kwargs)
+		
+		t = loader.get_template(template)
+		c = Context(context_vars)
+		return t.render(c)
+		
+		
+		
+	def _render_default(self, pos, **kwargs):
+		if self.default_render_js:
+			return self._render_js_ad(pos, **kwargs)
+		else:
+			return ""
+			
+			
+		
+	def get(self, pos, ad=None, disable_ad_manager=None, custom_only=False, **kwargs):
 		""" Main class to get ad tag """
-		""" All Keyword Configuration variables
+		""" 
+		Configuration variables used in this function:
 			pos -- Ad position slug as defined in Zone_Position
 			ad -- A predefined ad, if needed
+			custom_only -- Only deliver a custom ad, don't use DART
+		
+		Standard keywords passed on to template and other functions:
 			size -- Limit ads by size, 0x0 is a wildcard
-			custom_only -- Only deliver a custom ad, don"t use DART
-			
-			Keyword variables passed on to other functions
-			
 			template -- Template used to render the ad, defaults to basic JS embed
 			desc_text -- Text that comes before ad, declaring who the sponsor is
 			text_version -- Only deliver text version for a custom ad
@@ -261,18 +282,15 @@ class Ad_Page(object):
 		"""
 
 		# If ad manager is disabled, it goes straight to displaying the iframe/js code
-		# Mainly here as a failsafe in case things are not configured right in the Admin
-		
-		if self.disable_ad_manager:			
-			return self._render_js_ad(pos, **kwargs)
-		
+
+		if self.disable_ad_manager and not disable_ad_manager:	
+			return self._render_default(pos, **kwargs)
 		else:
 			if not ad:
 				ad = self.has_ad(pos, **kwargs)
-			if ad:
-				if ad.custom_ad:
-					return self._render_custom_ad(pos, ad.custom_ad, **kwargs)
-				elif custom_only == False:
-					return self._render_js_ad(pos, **kwargs)
-			else :
-				return ""
+				
+			if ad and ad.custom_ad and not custom_only:
+				return self._render_custom_ad(pos, ad.custom_ad, **kwargs)
+			else:
+				return self._render_default(pos, **kwargs)
+
