@@ -134,12 +134,12 @@ class Ad_Page(object):
 
 	def __init__(self, settings={}, site=None, zone=None, default_render_js=None, disable_ad_manager=None, *args, **kwargs):
 		""" Updates default ad page attributes
-			site - DART site 
-			zone - DART zone
-			default_render_js - render DART javascript by default, otherwise blank
-			disable_ad_manager - Turn off ad management
+			site - DART site - string
+			zone - DART zone - string
+			default_render_js - render DART javascript by default, otherwise blank - boolean
+			disable_ad_manager - Turn off ad management - boolean
 			
-			Kwargs are passed to DART string. Can be any key, value pair
+			Kwargs are passed to DART string. Can be any key, value pair - dict
 			
 		"""
 		for setting in settings:
@@ -269,15 +269,17 @@ class Ad_Page(object):
 		""" Main class to get ad tag """
 		""" 
 		Configuration variables used in this function:
-			pos -- Ad position slug as defined in Zone_Position
-			ad -- A predefined ad, if needed
-			custom_only -- Only deliver a custom ad, don't use DART
+			pos -- Ad position slug as defined in Zone_Position - string
+			
+			ad -- A predefined ad, if needed - Ad object
+			custom_only -- Only deliver a custom ad, don't use DART - boolean
+			enable_ad_manager -- Override page settings and use the ad manager - boolean 
 		
 		Standard keywords passed on to template and other functions:
-			size -- Limit ads by size, 0x0 is a wildcard
-			template -- Template used to render the ad, defaults to basic JS embed
-			desc_text -- Text that comes before ad, declaring who the sponsor is
-			text_version -- Only deliver text version for a custom ad
+			size -- Limit ads by size, 0x0 is a wildcard - string
+			template -- Template used to render the ad, defaults to basic JS embed - filename string
+			desc_text -- Text that comes before ad, declaring who the sponsor is - string
+			text_version -- Only deliver text version for a custom ad - boolean
 		
 		"""
 
