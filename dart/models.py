@@ -123,7 +123,7 @@ class Zone_Position(models.Model):
 		
 
 class Ad_Page(object):
-	""" Base class for Ad and Ad_Factory, keeps track of assigned attributes """
+	""" Base class for ad settings on a page """
 	
 	attributes = {}
 	_tile = 0
@@ -131,9 +131,11 @@ class Ad_Page(object):
 	zone = None
 	default_render_js = True
 	disable_ad_manager = True
+	page_ads = {}
 
 	def __init__(self, settings={}, site=None, zone=None, default_render_js=None, disable_ad_manager=None, *args, **kwargs):
-		""" Updates default ad page attributes
+		""" 
+		Ad page attributes that are configured here:
 			site - DART site - string
 			zone - DART zone - string
 			default_render_js - render DART javascript by default, otherwise blank - boolean
@@ -152,6 +154,11 @@ class Ad_Page(object):
 	
 		self.attributes.update(**kwargs)
 		
+		# Pre-load all of the ads for the page into a dict
+		if not self.disable_ad_manager:
+			page_ads = Zone_Position.objects.all().filter(zone__slug__in=(self.zone,"ros"))
+			for ad in page_ads:
+				self.page_ads[ad.position.slug] = ad
 		
 			
 	def tile(self):
@@ -222,13 +229,16 @@ class Ad_Page(object):
 			return ""
 			
 	
-	def _render_custom_ad(self, pos, custom_ad, text_version=False, desc_text="", **kwargs):
+	def _render_custom_ad(self, pos, custom_ad, template="dart/embed.html", text_version=False, desc_text="", **kwargs):
+	
 		if text_version:
 			return custom_ad.text_version
+			
 		elif custom_ad.embed:
 			return custom_ad.embed
-		else :
-			t = loader.get_template("dart/embed.html")
+		
+		elif custom_ad.url:
+			t = loader.get_template(template)
 			c = Context({
 				"pos": pos,
 				"link": custom_ad.url,
@@ -236,6 +246,8 @@ class Ad_Page(object):
 				"desc_text": desc_text
 			})
 			return t.render(c)
+		else:
+			return ""
 			
 	def _render_js_ad(self, pos, size="0x0", template="dart/ad.html", desc_text="", **kwargs):
 		
@@ -255,31 +267,34 @@ class Ad_Page(object):
 		c = Context(context_vars)
 		return t.render(c)
 		
-		
-		
 	def _render_default(self, pos, **kwargs):
 		if self.default_render_js:
 			return self._render_js_ad(pos, **kwargs)
 		else:
 			return ""
-			
-			
+
+	
 		
 	def get(self, pos, ad=None, enable_ad_manager=None, custom_only=False, **kwargs):
-		""" Main class to get ad tag """
 		""" 
-		Configuration variables used in this function:
-			pos -- Ad position slug as defined in Zone_Position - string
-			
-			ad -- A predefined ad, if needed - Ad object
-			custom_only -- Only deliver a custom ad, don't use DART - boolean
-			enable_ad_manager -- Override page settings and use the ad manager - boolean 
+		Main method to display ad code
 		
-		Standard keywords passed on to template and other functions:
-			size -- Limit ads by size, 0x0 is a wildcard - string
-			template -- Template used to render the ad, defaults to basic JS embed - filename string
-			desc_text -- Text that comes before ad, declaring who the sponsor is - string
-			text_version -- Only deliver text version for a custom ad - boolean
+		Configuration variables used in this function
+		
+			Required:
+				pos -- Ad position slug as defined in Zone_Position - string
+			
+			Optional:
+				ad -- A predefined ad, if needed - Ad object
+				custom_only -- Only deliver a custom ad, don't use DART - boolean
+				enable_ad_manager -- Override page settings and use the ad manager - boolean 
+	
+			
+			Standard keywords passed on to template and other functions:
+				size -- Limit ads by size, 0x0 is a wildcard - string
+				template -- Template used to render the ad, defaults to basic JS embed - filename string
+				desc_text -- Text that comes before ad, declaring who the sponsor is - string
+				text_version -- Only deliver text version for a custom ad - boolean
 		
 		"""
 
@@ -288,8 +303,8 @@ class Ad_Page(object):
 		if self.disable_ad_manager and not enable_ad_manager:	
 			return self._render_default(pos, **kwargs)
 		else:
-			if not ad:
-				ad = self.has_ad(pos, **kwargs)
+			if not ad and pos in self.page_ads:
+				ad = self.page_ads[pos]
 				
 			if ad and ad.custom_ad and not custom_only:
 				return self._render_custom_ad(pos, ad.custom_ad, **kwargs)
