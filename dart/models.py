@@ -1,9 +1,8 @@
 from django.db import models
-from cropduster.models import CropDusterField
 from django.template.defaultfilters import slugify
 from ckeditor.fields import RichTextField
 from coffin.template import Context, loader
-
+from django.conf import settings
 from settings import UPLOAD_PATH
 
 STANDARD_AD_SIZES = (
@@ -32,6 +31,11 @@ CUSTOM_AD_TYPES = (
 	(0, "Custom HTML"),
 	(1, "Image/URL")
 )
+
+DART_DOMAIN = getattr(settings, "DART_DOMAIN", "ad.doubleclick.net")
+
+
+DART_AD_DEFAULTS = getattr(settings, "DART_AD_DEFAULTS", settings.DART_AD_DEFAULTS)
 
 class Position(models.Model):
 
@@ -73,7 +77,7 @@ class Custom_Ad(models.Model):
 	
 	type =  models.IntegerField(choices=CUSTOM_AD_TYPES, default=0)
 	
-	url = models.URLField(null=True, blank=True, help_text="Click tag link")
+	url = models.URLField(null=True, blank=True, help_text="Click tag URL")
 	
 	image = models.ImageField(null=True, blank=True, upload_to=UPLOAD_PATH + "custom_ads", help_text="Image for custom ad")
 	
@@ -120,7 +124,6 @@ class Zone_Position(models.Model):
 		verbose_name = "Enabled Position"
 		verbose_name_plural = "Enabled Positions"
 
-		
 
 class Ad_Page(object):
 	""" Base class for ad settings on a page """
@@ -144,7 +147,9 @@ class Ad_Page(object):
 			Kwargs are passed to DART string. Can be any key, value pair - dict
 			
 		"""
-		for setting in settings:
+		DART_AD_DEFAULTS.update(settings)
+		
+		for setting in DART_AD_DEFAULTS:
 			self.__setattr__(setting, settings[setting])
 		
 		if site: self.site = site
@@ -152,58 +157,23 @@ class Ad_Page(object):
 		if default_render_js: self.default_render_js = default_render_js
 		if disable_ad_manager: self.disable_ad_manager = disable_ad_manager
 	
-		self.attributes.update(**kwargs)
+		self.attributes.update(kwargs)
 		
 		# Pre-load all of the ads for the page into a dict
 		if not self.disable_ad_manager:
 			page_ads = Zone_Position.objects.all().filter(zone__slug__in=(self.zone,"ros"))
 			for ad in page_ads:
 				self.page_ads[ad.position.slug] = ad
-		
-			
+
+	@property
 	def tile(self):
+		""" Gets and increments the tile position for the page """
 		self._tile = self._tile + 1
 		return self._tile
-		
 
-	def get_link(self, **kwargs):
-		link = "%s/%s;" % (self.site, self.zone)
-
-		for attr, val in self.attributes.items() + kwargs.items():
-			if attr == "title":
-				continue
-			# if it is a non-string iteratible object
-			if hasattr(val, "__iter__"):
-				link += self._format_multiple_values(attr, val)
-			else:
-				link += self._format_value(attr, val)
-
-		return link
-
-	def _format_value(self, attribute_name, val):
-
-		if attribute_name != "sz":
-			val = slugify(val)
-
-		return "%s=%s;" % (attribute_name, val)
-
-	def _format_multiple_values(self, attr, values):
-
-		formatted = ""
-		index = ""
-		for val in values:
-			enumerated_attr = attr + str(index)
-			formatted += self._format_value(enumerated_attr, val)
-
-			if index == "":
-				index = 1
-				
-			index += 1
-
-		return formatted
-	
 	
 	def has_ad(self, pos, custom_ad=False, **kwargs):
+		""" Doesn't render an ad, just checks for existence in ad manager """
 		try:
 			qs = Zone_Position.objects.all().filter(position__slug=pos, zone__slug__in=(self.zone,"ros"))
 			if custom_ad:
@@ -212,24 +182,18 @@ class Ad_Page(object):
 		except:
 			return None
 			
-	def _iframe_url(self, pos, size, **kwargs):
-		
-		self.attributes["pos"] = pos
-		self.attributes["sz"] = size
-		link = "/ad/" + self.get_link(**kwargs)
-
-		return link
-		
 	def get_custom_ad(self, slug, pos, **kwargs):
+		""" Gets custom ad code if it exists """
 		try:
 			custom_ad = Custom_Ad.objects.get(slug=slug)
-			return _render_custom_ad(pos, custom_ad, **kwargs)
+			return render_custom_ad(pos, custom_ad, **kwargs)
 			
 		except Custom_Ad.DoesNotExist:
 			return ""
 			
 	
-	def _render_custom_ad(self, pos, custom_ad, template="dart/embed.html", text_version=False, desc_text="", **kwargs):
+	def render_custom_ad(self, pos, custom_ad, template="dart/embed.html", text_version=False, desc_text="", **kwargs):
+		""" Renders the custom ad, determining which template to use based on custom ad settings """
 	
 		if text_version:
 			return custom_ad.text_version
@@ -241,7 +205,7 @@ class Ad_Page(object):
 			t = loader.get_template(template)
 			c = Context({
 				"pos": pos,
-				"link": custom_ad.url,
+				"link_url": custom_ad.url,
 				"image": custom_ad.image,
 				"desc_text": desc_text
 			})
@@ -249,33 +213,41 @@ class Ad_Page(object):
 		else:
 			return ""
 			
-	def _render_js_ad(self, pos, size="0x0", template="dart/ad.html", desc_text="", **kwargs):
-		
-		self.attributes["pos"] = pos
-		self.attributes["sz"] = size
-		link = self.get_link(**kwargs)
+	def render_js_ad(self, pos, template="dart/ad.html", desc_text="", **kwargs):
+		""" 
+			Renders a DART JS tag to the ad HTML template 
+		"""
 		
 		context_vars = {
-			"pos": pos,
-			"link": link,
-			"tile": self.tile(),
+			"js_url": self.js_url(pos, **kwargs),
+			"link_url": self.link_url(pos, **kwargs),
+			"image_url": self.image_url(pos, **kwargs),
+			"tile": self.tile,
 			"desc_text": desc_text
 		}
-		context_vars.update(kwargs)
+
 		
 		t = loader.get_template(template)
 		c = Context(context_vars)
 		return t.render(c)
 		
-	def _render_default(self, pos, **kwargs):
+		
+		
+	def render_default(self, pos, **kwargs):
+		"""  
+			Renders default ad content, blank or DART javascript,
+			depending on settings 
+		"""
+	
 		if self.default_render_js:
-			return self._render_js_ad(pos, **kwargs)
+			return self.render_js_ad(pos, **kwargs)
 		else:
 			return ""
 
-	
-		
 	def get(self, pos, ad=None, enable_ad_manager=None, custom_only=False, **kwargs):
+		return self.render_ad(pos, ad, enable_ad_manager, custom_only, **kwargs) 
+		
+	def render_ad(self, pos, ad=None, enable_ad_manager=None, custom_only=False, **kwargs):
 		""" 
 		Main method to display ad code
 		
@@ -301,13 +273,95 @@ class Ad_Page(object):
 		# If ad manager is disabled, it goes straight to displaying the iframe/js code
 
 		if self.disable_ad_manager and not enable_ad_manager:	
-			return self._render_default(pos, **kwargs)
+			return self.render_default(pos, **kwargs)
 		else:
 			if not ad and pos in self.page_ads:
 				ad = self.page_ads[pos]
 				
 			if ad and ad.custom_ad and not custom_only:
-				return self._render_custom_ad(pos, ad.custom_ad, **kwargs)
+				return self.render_custom_ad(pos, ad.custom_ad, **kwargs)
 			else:
-				return self._render_default(pos, **kwargs)
+				return self.render_default(pos, **kwargs)
+	
+	
+	# Methods to format DART URLs
+	
+	def param_string(self, pos, **kwargs):
+		""" 
+			Formats the DART URL from a set of keyword arguments and settings 
+		
+			Attributes are defined in order of explicity
+				More explicit overrides more general
+				default -> zone attributes -> kwargs
+		"""
+		
+		attrs = {
+			"size": "0x0",
+			"pos": pos,
+		}
+		attrs.update(self.attributes)
+		attrs.update(kwargs)
+
+	
+		url = "%s/%s;" % (self.site, self.zone)
+
+		for attr, val in attrs.items():
+			if attr == "title":
+				continue
+				
+			# if it is a non-string iteratible object
+			if hasattr(val, "__iter__"):
+				url += self.format_multiple_values(attr, val)
+			else:
+				url += self.format_value(attr, val)
+		return url
+	
+	def format_url(self, pos, ad_type, **kwargs):
+		""" Formats the DART URL from a set of keyword arguments and settings """
+		
+		url = self.param_string(pos, **kwargs)
+		return "http://%s/%s/%stile=%s;" % (DART_DOMAIN, ad_type, url, self.tile)
+	
+	def js_url(self, pos, **kwargs):
+		""" Gets the DART URL for a Javascript ad """
+		return self.format_url(pos, "adj", **kwargs)
+
+	def iframe_url(self, pos, **kwargs):
+		""" Gets the DART URL for an Iframe ad """
+		return self.format_url(pos, "ad", **kwargs)
+		
+	def image_url(self, pos, **kwargs):
+		""" Gets the DART URL for an image src """
+		return self.format_url(pos, "ad", **kwargs)
+		
+	def link_url(self, pos, **kwargs):
+		""" Gets the DART URL for a link used in HTML ads """
+		return self.format_url(pos, "jump", **kwargs)
+
+	def format_value(self, attr, val):
+		""" Formats a dict keyword into a DART URL parameter """
+
+		if attr == "size":
+			# DART needs size var explicitly spelled 'sz'
+			attr = "sz"
+		else:
+			val = slugify(val)
+
+		return "%s=%s;" % (attr, val)
+
+	def format_multiple_values(self, attr, values):
+		""" Formats a dict keyword array into DART URL parameters """
+
+		formatted = ""
+		index = ""
+		for val in values:
+			enumerated_attr = attr + str(index)
+			formatted += self.format_value(enumerated_attr, val)
+
+			if index == "":
+				index = 1
+				
+			index += 1
+
+		return formatted
 
