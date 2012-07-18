@@ -290,7 +290,7 @@ class Ad_Page(object):
 				
 			elif ad and not ad.custom_ad:
 				# if we have an ad
-				return self.render_default(pos, size=ad.position.size_list, **kwargs)
+				return self.render_js_ad(pos, size=ad.position.size_list, **kwargs)
 			else:
 				return self.render_default(pos, **kwargs)
 	
