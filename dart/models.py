@@ -4,28 +4,10 @@ from ckeditor.fields import RichTextField
 from coffin.template import Context, loader
 from django.conf import settings
 from settings import UPLOAD_PATH
+from time import mktime
+from datetime import datetime
 
-STANDARD_AD_SIZES = (
-	(0, "Any Size | 0x0"),
-	(1, "Custom Size"),
-	(2, "Large Rectangle | 336x280"),
-	(3, "Medium Rectangle | 300x250"),
-	(4, "Square Pop-up | 250x250"),
-	(5, "Vertical Rectangle | 240x400"),
-	(6, "Rectangle | 180x150"),
-	(7, "Leaderboard | 728x90"),
-	(8, "Full Banner | 468x60"),
-	(9, "Half Banner | 234x60"),
-	(10, "Button 1 | 120x90"),
-	(11, "Button 2 | 120x60"),
-	(12, "Micro Bar | 88x31"),
-	(13, "Micro Button | 80x15"),
-	(14, "Vertical Banner | 120x240"),
-	(15, "Square Button | 125x125"),
-	(16, "Skyscraper | 120x600"),
-	(17, "Wide Skyscraper | 160x600"),
-	(18, "Half-Page | 300x600")
-)
+
 
 CUSTOM_AD_TYPES = (
 	(0, "Custom HTML"),
@@ -34,26 +16,41 @@ CUSTOM_AD_TYPES = (
 
 DART_DOMAIN = getattr(settings, "DART_DOMAIN", "ad.doubleclick.net")
 
-
 DART_AD_DEFAULTS = getattr(settings, "DART_AD_DEFAULTS", settings.DART_AD_DEFAULTS)
+
+
+class Size(models.Model):
+	name = models.CharField(max_length=255, null=False, blank=False) 
+	
+	width = models.PositiveSmallIntegerField(default=0, null=False, blank=False, help_text="Use zero for unknown/variable values")
+	
+	height = models.PositiveSmallIntegerField(default=0, null=False, blank=False, help_text="Use zero for unknown/variable values")
+	
+	def __unicode__(self):
+		return u"%s - %s" % (self.name, self.dart_formatted_size)
+	
+	@property
+	def dart_formatted_size(self):
+		return u"%sx%s" % (self.width, self.height)
 
 class Position(models.Model):
 
-	name = models.CharField(max_length=255) 
+	name = models.CharField(max_length=255, null=False, blank=False) 
 
-	slug = models.CharField(max_length=255) 
-
-	size = models.IntegerField(choices=STANDARD_AD_SIZES, default=0)
-
-	width = models.IntegerField(default=0, null=False, blank=False, help_text="Use zero for unknown/variable values")
+	slug = models.CharField(max_length=255, null=False, blank=False)
 	
-	height = models.IntegerField(default=0, null=False, blank=False, help_text="Use zero for unknown/variable values")
+	sizes = models.ManyToManyField("Size", null=False, blank=False)
 
 	class Meta:
 		verbose_name_plural = "Ad Positions"
 		
 	def __unicode__(self):
 		return u"%s" % self.name
+		
+	@property
+	def size_list(self):
+		return ",".join([size.dart_formatted_size for size in self.sizes.all()])
+
 		
 class Zone(models.Model):
 
@@ -117,6 +114,8 @@ class Zone_Position(models.Model):
 	
 	custom_ad = models.ForeignKey(Custom_Ad, blank=True, null=True,)
 	
+	enabled = models.BooleanField(default=True)
+	
 	def __unicode__(self):
 		return u"%s: %s" % (self.zone, self.position)
 	
@@ -150,14 +149,15 @@ class Ad_Page(object):
 		DART_AD_DEFAULTS.update(settings)
 		
 		for setting in DART_AD_DEFAULTS:
-			self.__setattr__(setting, settings[setting])
+			self.__setattr__(setting, DART_AD_DEFAULTS[setting])
 		
 		if site: self.site = site
 		if zone: self.zone = zone
 		if default_render_js: self.default_render_js = default_render_js
 		if disable_ad_manager: self.disable_ad_manager = disable_ad_manager
 	
-		self.attributes.update(kwargs)
+		if kwargs:
+			self.attributes.update(kwargs)
 		
 		# Pre-load all of the ads for the page into a dict
 		if not self.disable_ad_manager:
@@ -226,7 +226,6 @@ class Ad_Page(object):
 			"desc_text": desc_text
 		}
 
-		
 		t = loader.get_template(template)
 		c = Context(context_vars)
 		return t.render(c)
@@ -272,11 +271,15 @@ class Ad_Page(object):
 
 		# If ad manager is disabled, it goes straight to displaying the iframe/js code
 
+		
 		if self.disable_ad_manager and not enable_ad_manager:	
 			return self.render_default(pos, **kwargs)
 		else:
-			if not ad and pos in self.page_ads:
-				ad = self.page_ads[pos]
+			if not ad:
+				if enable_ad_manager and not self.page_ads:
+					ad = self.has_ad(pos, **kwargs)
+				elif pos in self.page_ads:
+					ad = self.page_ads[pos]
 				
 			if ad and ad.custom_ad and not custom_only:
 				return self.render_custom_ad(pos, ad.custom_ad, **kwargs)
@@ -324,7 +327,14 @@ class Ad_Page(object):
 	
 	def js_url(self, pos, **kwargs):
 		""" Gets the DART URL for a Javascript ad """
-		return self.format_url(pos, "adj", **kwargs)
+		""" with_ord -- whether to spit out the ord var in the string """
+		
+		
+		url = self.format_url(pos, "adj", **kwargs)
+		if "with_ord" in kwargs:
+			url = u"%sord=%s" % (url, int(mktime(datetime.now().timetuple())))
+		
+		return url
 
 	def iframe_url(self, pos, **kwargs):
 		""" Gets the DART URL for an Iframe ad """
