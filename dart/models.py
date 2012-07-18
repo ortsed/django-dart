@@ -161,7 +161,7 @@ class Ad_Page(object):
 		
 		# Pre-load all of the ads for the page into a dict
 		if not self.disable_ad_manager:
-			page_ads = Zone_Position.objects.all().filter(zone__slug__in=(self.zone,"ros"))
+			page_ads = Zone_Position.objects.all().filter(zone__slug__in=(self.zone,"ros"), enabled=True)
 			for ad in page_ads:
 				self.page_ads[ad.position.slug] = ad
 
@@ -175,7 +175,7 @@ class Ad_Page(object):
 	def has_ad(self, pos, custom_ad=False, **kwargs):
 		""" Doesn't render an ad, just checks for existence in ad manager """
 		try:
-			qs = Zone_Position.objects.all().filter(position__slug=pos, zone__slug__in=(self.zone,"ros"))
+			qs = Zone_Position.objects.all().filter(position__slug=pos, zone__slug__in=(self.zone,"ros"), enabled=True)
 			if custom_ad:
 				qs = qs.filter(custom_ad__isnull=False)
 			return qs[0]
@@ -232,21 +232,21 @@ class Ad_Page(object):
 		
 		
 		
-	def render_default(self, pos, **kwargs):
+	def render_default(self, pos, custom_only=False, **kwargs):
 		"""  
 			Renders default ad content, blank or DART javascript,
 			depending on settings 
 		"""
 	
-		if self.default_render_js:
+		if self.default_render_js and not custom_only:
 			return self.render_js_ad(pos, **kwargs)
 		else:
 			return ""
 
-	def get(self, pos, ad=None, enable_ad_manager=None, custom_only=False, **kwargs):
-		return self.render_ad(pos, ad, enable_ad_manager, custom_only, **kwargs) 
+	def get(self, pos, ad=None, enable_ad_manager=None, **kwargs):
+		return self.render_ad(pos, ad, enable_ad_manager, **kwargs) 
 		
-	def render_ad(self, pos, ad=None, enable_ad_manager=None, custom_only=False, **kwargs):
+	def render_ad(self, pos, ad=None, enable_ad_manager=None, **kwargs):
 		""" 
 		Main method to display ad code
 		
@@ -270,19 +270,27 @@ class Ad_Page(object):
 		"""
 
 		# If ad manager is disabled, it goes straight to displaying the iframe/js code
-
-		
 		if self.disable_ad_manager and not enable_ad_manager:	
 			return self.render_default(pos, **kwargs)
 		else:
+		
+			# using the ad manager
+		
 			if not ad:
+				# if no ad info, get ad info
+				
 				if enable_ad_manager and not self.page_ads:
 					ad = self.has_ad(pos, **kwargs)
 				elif pos in self.page_ads:
 					ad = self.page_ads[pos]
 				
-			if ad and ad.custom_ad and not custom_only:
+			if ad and ad.custom_ad:
+				# if we have an ad, and its a custom one
 				return self.render_custom_ad(pos, ad.custom_ad, **kwargs)
+				
+			elif ad and not ad.custom_ad:
+				# if we have an ad
+				return self.render_default(pos, size=ad.position.size_list, **kwargs)
 			else:
 				return self.render_default(pos, **kwargs)
 	
