@@ -9,29 +9,29 @@ A simple Django application for generating DoubleClick adtags inside of Django t
 Defaults are set inside of settings.py, and should at a minimum contain the 'site' and a default fallback zone
 
     DART_AD_DEFAULTS = {
-        'site':'wiretest',
-        'zone':'misc'
+        "site":"testsite",
+        "zone":"misc",
+        "disable_ad_manager": True
         # etc...
     }
 
 
 ###In the views
-In the view, you can set ad variables for all the ads that will show up on that page
+In the view, load an instance of the Ad_Page model that will control the ad tags for that page, 
+and then pass that variable to the template.
 
-    Ad.set(by="Josh West", tag="white house")
-
-
-###In a templates
-In the templates you can use the ad_tag tempalte tag
-
-    {% load ad_tags %}
-
-    {{ "pos=promo size=336x90 other=sample"|ad_tag }}
+    from dart.models import Ad_page
+    ads = Ad_Page(settings={"default_render_js": True}, zone=zone)
+    
 
 
-###Structure
+###In templates
+In the templates you can get the ad tag with the get method of the ad page and the ad position, 
+passing any additional variables for that tag at the same time.
 
-- The base python Ad class is dart.ads.Ad
-- The django-template tag is located in dart.templatetags.ad_tags
-- The HTML is dart/templates/ad.html
+
+    {{ ads.get("leaderboard", size="728x90", template="dart/ad.html") }}
+
+
+
 
