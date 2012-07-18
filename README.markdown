@@ -3,7 +3,7 @@ Django-DART
 DoubleClick Ad Generator
 ------------------------
 
-A simple Django application for generating DoubleClick adtags inside of Djanog tempaltes.
+A simple Django application for generating DoubleClick adtags inside of Django templates.
 
 ###Defaults
 Defaults are set inside of settings.py, and should at a minimum contain the 'site' and a default fallback zone
