@@ -15,6 +15,13 @@ Defaults are set inside of settings.py, and should at a minimum contain the 'sit
         # etc...
     }
 
+Config vars:
+    site -- DART site name
+    zone -- DART zone for the page or section ads to be displayed.
+    disable_ad_manager -- don't use the app's interface to enable disable ads.  
+    If so, the app simply renders the Javascript code for all positions.
+    default_render_js -- Toggle whether the default is to render DART Javascript code, or nothing.
+
 
 ###In the views
 In the view, load an instance of the Ad_Page model that will control the ad tags for that page, 
