@@ -223,7 +223,8 @@ class Ad_Page(object):
 			"link_url": self.link_url(pos, **kwargs),
 			"image_url": self.image_url(pos, **kwargs),
 			"tile": self.tile,
-			"desc_text": desc_text
+			"desc_text": desc_text,
+			"pos": pos
 		}
 
 		t = loader.get_template(template)
