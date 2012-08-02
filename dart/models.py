@@ -162,10 +162,10 @@ class Ad_Page(object):
 			self.attributes.update(kwargs)
 		
 		# Pre-load all of the ads for the page into a dict
-		if not self.disable_ad_manager:
-			page_ads = Zone_Position.objects.all().filter(zone__slug__in=(self.zone,"ros"), enabled=True)
-			for ad in page_ads:
-				self.page_ads[ad.position.slug] = ad
+		#if not self.disable_ad_manager:
+		#	page_ads = Zone_Position.objects.all().filter(zone__slug__in=(self.zone,"ros"), enabled=True)
+		#	for ad in page_ads:
+		#		self.page_ads[ad.position.slug] = ad
 
 	@property
 	def tile(self):
