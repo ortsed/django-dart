@@ -16,6 +16,8 @@ CUSTOM_AD_TYPES = (
 
 DART_DOMAIN = getattr(settings, "DART_DOMAIN", "ad.doubleclick.net")
 
+DART_NETWORK_CODE = getattr(settings, "DART_NETWORK_CODE", "617")
+
 DART_AD_DEFAULTS = getattr(settings, "DART_AD_DEFAULTS", settings.DART_AD_DEFAULTS)
 
 
@@ -332,7 +334,7 @@ class Ad_Page(object):
 		""" Formats the DART URL from a set of keyword arguments and settings """
 		
 		url = self.param_string(pos, **kwargs)
-		return "http://%s/%s/%stile=%s;" % (DART_DOMAIN, ad_type, url, self.tile)
+		return "http://%s/N%s/%s/%stile=%s;" % (DART_DOMAIN, DART_NETWORK_CODE, ad_type, url, self.tile)
 	
 	def js_url(self, pos, **kwargs):
 		""" Gets the DART URL for a Javascript ad """
