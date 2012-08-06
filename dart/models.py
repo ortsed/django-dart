@@ -16,6 +16,8 @@ CUSTOM_AD_TYPES = (
 
 DART_DOMAIN = getattr(settings, "DART_DOMAIN", "ad.doubleclick.net")
 
+DART_NETWORK_CODE = getattr(settings, "DART_NETWORK_CODE", "617")
+
 DART_AD_DEFAULTS = getattr(settings, "DART_AD_DEFAULTS", settings.DART_AD_DEFAULTS)
 
 
@@ -160,10 +162,10 @@ class Ad_Page(object):
 			self.attributes.update(kwargs)
 		
 		# Pre-load all of the ads for the page into a dict
-		if not self.disable_ad_manager:
-			page_ads = Zone_Position.objects.all().filter(zone__slug__in=(self.zone,"ros"), enabled=True)
-			for ad in page_ads:
-				self.page_ads[ad.position.slug] = ad
+		#if not self.disable_ad_manager:
+		#	page_ads = Zone_Position.objects.all().filter(zone__slug__in=(self.zone,"ros"), enabled=True)
+		#	for ad in page_ads:
+		#		self.page_ads[ad.position.slug] = ad
 
 	@property
 	def tile(self):
@@ -223,7 +225,8 @@ class Ad_Page(object):
 			"link_url": self.link_url(pos, **kwargs),
 			"image_url": self.image_url(pos, **kwargs),
 			"tile": self.tile,
-			"desc_text": desc_text
+			"desc_text": desc_text,
+			"pos": pos
 		}
 
 		t = loader.get_template(template)
@@ -293,7 +296,6 @@ class Ad_Page(object):
 				if "size" not in kwargs:
 					kwargs["size"] = ad.position.size_list
 				return self.render_js_ad(pos, **kwargs)
-
 			else:
 				return self.render_default(pos, **kwargs)
 	
@@ -334,7 +336,7 @@ class Ad_Page(object):
 		""" Formats the DART URL from a set of keyword arguments and settings """
 		
 		url = self.param_string(pos, **kwargs)
-		return "http://%s/%s/%stile=%s;" % (DART_DOMAIN, ad_type, url, self.tile)
+		return "http://%s/N%s/%s/%stile=%s;" % (DART_DOMAIN, DART_NETWORK_CODE, ad_type, url, self.tile)
 	
 	def js_url(self, pos, **kwargs):
 		""" Gets the DART URL for a Javascript ad """
