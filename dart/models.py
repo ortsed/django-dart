@@ -127,7 +127,7 @@ class Zone_Position(models.Model):
 class Ad_Page(object):
 	""" Base class for ad settings on a page """
 	
-	attributes = {}
+	ad_attributes = {}
 	_tile = 0
 	site = None
 	zone = None
@@ -144,7 +144,7 @@ class Ad_Page(object):
 			network_code - DART network code - numerical string
 			default_render_js - render DART javascript by default, otherwise blank - boolean
 			disable_ad_manager - Turn off ad management - boolean
-			
+			ad_attributes - dict of name/value pairs passed to all dart tags
 			Kwargs are passed to DART string. Can be any key, value pair - dict
 			
 		"""
@@ -160,7 +160,7 @@ class Ad_Page(object):
 		if disable_ad_manager: self.disable_ad_manager = disable_ad_manager
 	
 		if ad_attributes:
-			self.attributes.update(ad_attributes)
+			self.ad_attributes.update(ad_attributes)
 		
 		# Pre-load all of the ads for the page into a dict
 		#if not self.disable_ad_manager:
@@ -316,7 +316,7 @@ class Ad_Page(object):
 		"""
 		
 		attrs = {"size":"0x0"}
-		attrs.update(self.attributes)
+		attrs.update(self.ad_attributes)
 		if "ad_attributes" in kwargs:
 			attrs.update(kwargs["ad_attributes"])
 		attrs.update({
