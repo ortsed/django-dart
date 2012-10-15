@@ -18,6 +18,8 @@ DART_DOMAIN = getattr(settings, "DART_DOMAIN", "ad.doubleclick.net")
 
 DART_AD_DEFAULTS = getattr(settings, "DART_AD_DEFAULTS", settings.DART_AD_DEFAULTS)
 
+DART_NETWORK_CODE = getattr(settings, "DART_NETWORK_CODE", "")
+
 
 class Size(models.Model):
 	name = models.CharField(max_length=255, null=False, blank=False) 
@@ -153,9 +155,12 @@ class Ad_Page(object):
 		for setting in DART_AD_DEFAULTS:
 			self.__setattr__(setting, DART_AD_DEFAULTS[setting])
 		
+		
 		if site: self.site = site
 		if zone: self.zone = zone
-		if network_code: self.network_code = network_code
+
+		self.network_code = DART_NETWORK_CODE if DART_NETWORK_CODE else network_code
+
 		if default_render_js: self.default_render_js = default_render_js
 		if disable_ad_manager: self.disable_ad_manager = disable_ad_manager
 	
