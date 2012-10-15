@@ -18,7 +18,7 @@ DART_DOMAIN = getattr(settings, "DART_DOMAIN", "ad.doubleclick.net")
 
 DART_NETWORK_CODE = getattr(settings, "DART_NETWORK_CODE", "")
 
-DART_AD_DEFAULTS = getattr(settings, "DART_AD_DEFAULTS", settings.DART_AD_DEFAULTS)
+DART_AD_DEFAULTS = getattr(settings, "DART_AD_DEFAULTS", settings.DART_AD_DEFAULTS.copy())
 
 
 class Size(models.Model):
