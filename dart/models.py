@@ -345,8 +345,11 @@ class Ad_Page(object):
 			# if it is a non-string iteratible object
 			if hasattr(val, "__iter__"):
 				val = ",".join(val)
-			
-			url += "%s=%s;" % (attr, slugify(val))
+				
+			if attr not in ["size", "sz"]:
+				val = slugify(val)
+				
+			url += "%s=%s;" % (attr, val)
 		
 		if "with_ord" in kwargs:
 			url = u"%sord=%s;" % (url, int(mktime(datetime.now().timetuple())))
