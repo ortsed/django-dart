@@ -200,7 +200,7 @@ class Ad_Page(object):
 			return ""
 			
 	
-	def render_custom_ad(self, pos, custom_ad, template="dart/embed.html", text_version=False, desc_text="", **kwargs):
+	def render_custom_ad(self, pos, custom_ad, template="dart/embed.html", text_version=False, desc_text="", omit_noscript=False, **kwargs):
 		""" Renders the custom ad, determining which template to use based on custom ad settings """
 	
 		if text_version:
@@ -215,13 +215,14 @@ class Ad_Page(object):
 				"pos": pos,
 				"link_url": custom_ad.url,
 				"image": custom_ad.image,
-				"desc_text": desc_text
+				"desc_text": desc_text,
+                "omit_noscript": omit_noscript,
 			})
 			return t.render(c)
 		else:
 			return ""
 			
-	def render_js_ad(self, pos, template="dart/ad.html", desc_text="", **kwargs):
+	def render_js_ad(self, pos, template="dart/ad.html", desc_text="", omit_noscript=False, **kwargs):
 		""" 
 			Renders a DART JS tag to the ad HTML template 
 		"""
@@ -232,7 +233,8 @@ class Ad_Page(object):
 			"image_url": self.image_url(pos, **kwargs),
 			"tile": self.tile,
 			"desc_text": desc_text,
-			"pos": pos
+			"pos": pos,
+            "omit_noscript": omit_noscript,
 		}
 
 		t = loader.get_template(template)
@@ -241,14 +243,14 @@ class Ad_Page(object):
 		
 		
 		
-	def render_default(self, pos, custom_only=False, **kwargs):
+	def render_default(self, pos, custom_only=False, omit_noscript=False, **kwargs):
 		"""  
 			Renders default ad content, blank or DART javascript,
 			depending on settings 
 		"""
 	
 		if self.default_render_js and not custom_only:
-			return self.render_js_ad(pos, **kwargs)
+			return self.render_js_ad(pos, omit_noscript=omit_noscript, **kwargs)
 		else:
 			return ""
 
@@ -281,7 +283,7 @@ class Ad_Page(object):
 
 		# If ad manager is disabled, it goes straight to displaying the iframe/js code
 		if self.disable_ad_manager and not enable_ad_manager:	
-			return self.render_default(pos, **kwargs)
+			return self.render_default(pos, omit_noscript=omit_noscript, **kwargs)
 		else:
 		
 			# using the ad manager
@@ -296,15 +298,15 @@ class Ad_Page(object):
 				
 			if ad and ad.custom_ad:
 				# if we have an ad, and its a custom one
-				return self.render_custom_ad(pos, ad.custom_ad, **kwargs)
+				return self.render_custom_ad(pos, ad.custom_ad, omit_noscript=omit_noscript, **kwargs)
 				
 			elif ad and not ad.custom_ad:
 				# if we have an ad
 				if "size" not in kwargs:
 					kwargs["size"] = ad.position.size_list
-				return self.render_js_ad(pos, **kwargs)
+				return self.render_js_ad(pos, omit_noscript=omit_noscript, **kwargs)
 			else:
-				return self.render_default(pos, **kwargs)
+				return self.render_default(pos, omit_noscript=omit_noscript, **kwargs)
 	
 	
 	# Methods to format DART URLs

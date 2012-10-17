@@ -14,10 +14,13 @@ var this_ad_link = '{{ js_url }}ord=' + window.dart_random_ord + '?';
 document.write('<' + 'script type="text/javascript" src="' + this_ad_link + '">' + '<' + '/script>');
 //]]>
 		</script>
-		<noscript>
-		<a href="{{ link_url }}" title="">
-			<img src="{{ image_url }}" alt="" />
-		</a>
-		</noscript>
+
+    {% if not omit_noscript %}
+      <noscript>
+      <a href="{{ link_url }}" title="">
+        <img src="{{ image_url }}" alt="" />
+      </a>
+      </noscript>
+    {% endif %}
 	</div>
 </div>
