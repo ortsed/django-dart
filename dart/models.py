@@ -244,10 +244,10 @@ class Ad_Page(object):
 		else:
 			return ""
 
-	def get(self, pos, ad=None, enable_ad_manager=None, **kwargs):
-		return self.render_ad(pos, ad, enable_ad_manager, **kwargs) 
+	def get(self, pos, ad=None, enable_ad_manager=None, omit_noscript=False, **kwargs):
+		return self.render_ad(pos, ad, enable_ad_manager, omit_noscript=omit_noscript, **kwargs)
 		
-	def render_ad(self, pos, ad=None, enable_ad_manager=None, **kwargs):
+	def render_ad(self, pos, ad=None, enable_ad_manager=None, omit_noscript=False, **kwargs):
 		""" 
 		Main method to display ad code
 		
@@ -259,7 +259,8 @@ class Ad_Page(object):
 			Optional:
 				ad -- A predefined ad, if needed - Ad object
 				custom_only -- Only deliver a custom ad, don't use DART - boolean
-				enable_ad_manager -- Override page settings and use the ad manager - boolean 
+				enable_ad_manager -- Override page settings and use the ad manager - boolean
+				omit_noscript -- Option to omit noscript tag (for ads without backup images)
 	
 			
 			Standard keywords passed on to template and other functions:
