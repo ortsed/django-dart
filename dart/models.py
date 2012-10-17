@@ -18,6 +18,8 @@ DART_DOMAIN = getattr(settings, "DART_DOMAIN", "ad.doubleclick.net")
 
 DART_AD_DEFAULTS = getattr(settings, "DART_AD_DEFAULTS", settings.DART_AD_DEFAULTS)
 
+DART_NETWORK_CODE = getattr(settings, "DART_NETWORK_CODE", "")
+
 
 class Size(models.Model):
 	name = models.CharField(max_length=255, null=False, blank=False) 
@@ -127,22 +129,24 @@ class Zone_Position(models.Model):
 class Ad_Page(object):
 	""" Base class for ad settings on a page """
 	
-	attributes = {}
+	ad_attributes = {}
 	_tile = 0
 	site = None
 	zone = None
+	network_code = None
 	default_render_js = True
 	disable_ad_manager = True
 	page_ads = {}
 
-	def __init__(self, settings={}, site=None, zone=None, default_render_js=None, disable_ad_manager=None, *args, **kwargs):
+	def __init__(self, settings={}, site=None, zone=None, network_code="", default_render_js=None, disable_ad_manager=None, ad_attributes={}, *args, **kwargs):
 		""" 
 		Ad page attributes that are configured here:
 			site - DART site - string
 			zone - DART zone - string
+			network_code - DART network code - numerical string
 			default_render_js - render DART javascript by default, otherwise blank - boolean
 			disable_ad_manager - Turn off ad management - boolean
-			
+			ad_attributes - dict of name/value pairs passed to all dart tags
 			Kwargs are passed to DART string. Can be any key, value pair - dict
 			
 		"""
@@ -151,13 +155,17 @@ class Ad_Page(object):
 		for setting in DART_AD_DEFAULTS:
 			self.__setattr__(setting, DART_AD_DEFAULTS[setting])
 		
+		
 		if site: self.site = site
 		if zone: self.zone = zone
+
+		self.network_code = DART_NETWORK_CODE if DART_NETWORK_CODE else network_code
+
 		if default_render_js: self.default_render_js = default_render_js
 		if disable_ad_manager: self.disable_ad_manager = disable_ad_manager
 	
-		if kwargs:
-			self.attributes.update(kwargs)
+		if ad_attributes:
+			self.ad_attributes.update(ad_attributes)
 		
 		# Pre-load all of the ads for the page into a dict
 		#if not self.disable_ad_manager:
@@ -292,7 +300,9 @@ class Ad_Page(object):
 				
 			elif ad and not ad.custom_ad:
 				# if we have an ad
-				return self.render_js_ad(pos, size=ad.position.size_list, **kwargs)
+				if "size" not in kwargs:
+					kwargs["size"] = ad.position.size_list
+				return self.render_js_ad(pos, **kwargs)
 			else:
 				return self.render_default(pos, **kwargs)
 	
@@ -306,43 +316,70 @@ class Ad_Page(object):
 			Attributes are defined in order of explicity
 				More explicit overrides more general
 				default -> zone attributes -> kwargs
+
+				ad_attributes -- dict of name, value pairs to be passed to DART parameters
+				with_ord -- add ord for instances where its not passed by javascript
 		"""
 		
-		attrs = {
-			"size": "0x0",
+		attrs = {"size":"0x0"}
+		attrs.update(self.ad_attributes)
+		if "ad_attributes" in kwargs:
+			attrs.update(kwargs["ad_attributes"])
+		attrs.update({
 			"pos": pos,
-		}
-		attrs.update(self.attributes)
-		attrs.update(kwargs)
-
+		})
+		
+		# legacy catch in now that size is in ad_attributes
+		if "size" in kwargs:
+			attrs["size"] = kwargs["size"]
 	
 		url = "%s/%s;" % (self.site, self.zone)
 
 		for attr, val in attrs.items():
 			if attr == "title":
 				continue
-				
+			
+			elif attr == "size":
+			# DART needs size var explicitly spelled 'sz'
+				attr = "sz"
+
 			# if it is a non-string iteratible object
 			if hasattr(val, "__iter__"):
-				url += self.format_multiple_values(attr, val)
-			else:
-				url += self.format_value(attr, val)
+				val = ",".join(val)
+				
+			if attr not in ["size", "sz"]:
+				val = slugify(val)
+				
+			url += "%s=%s;" % (attr, val)
+		
+		if "with_ord" in kwargs:
+			url = u"%sord=%s;" % (url, int(mktime(datetime.now().timetuple())))
+		
 		return url
-	
+		
+	def format_path(self, pos, ad_type, **kwargs):
+		""" Formats the DART path, without domain, for those instances where that's useful.  Passed to format URL to create the whole ad tag """
+		url = self.param_string(pos, **kwargs)
+
+		if self.network_code:
+			return "/N%s/%s/%stile=%s;" % (self.network_code, ad_type, url, self.tile)
+		else:
+			return "/%s/%stile=%s;" % (ad_type, url, self.tile)
+			
 	def format_url(self, pos, ad_type, **kwargs):
 		""" Formats the DART URL from a set of keyword arguments and settings """
 		
-		url = self.param_string(pos, **kwargs)
-		return "http://%s/%s/%stile=%s;" % (DART_DOMAIN, ad_type, url, self.tile)
+		path = self.format_path(pos, ad_type, **kwargs)
+		
+		return "http://%s%s" % (DART_DOMAIN, path)
+	
+	def js_path(self, pos, **kwargs):
+		return self.format_path(pos, "adj", **kwargs)
 	
 	def js_url(self, pos, **kwargs):
 		""" Gets the DART URL for a Javascript ad """
-		""" with_ord -- whether to spit out the ord var in the string """
-		
 		
 		url = self.format_url(pos, "adj", **kwargs)
-		if "with_ord" in kwargs:
-			url = u"%sord=%s" % (url, int(mktime(datetime.now().timetuple())))
 		
 		return url
 
@@ -358,30 +395,4 @@ class Ad_Page(object):
 		""" Gets the DART URL for a link used in HTML ads """
 		return self.format_url(pos, "jump", **kwargs)
 
-	def format_value(self, attr, val):
-		""" Formats a dict keyword into a DART URL parameter """
-
-		if attr == "size":
-			# DART needs size var explicitly spelled 'sz'
-			attr = "sz"
-		else:
-			val = slugify(val)
-
-		return "%s=%s;" % (attr, val)
-
-	def format_multiple_values(self, attr, values):
-		""" Formats a dict keyword array into DART URL parameters """
-
-		formatted = ""
-		index = ""
-		for val in values:
-			enumerated_attr = attr + str(index)
-			formatted += self.format_value(enumerated_attr, val)
-
-			if index == "":
-				index = 1
-				
-			index += 1
-
-		return formatted
 
