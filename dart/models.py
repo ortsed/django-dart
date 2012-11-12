@@ -138,7 +138,7 @@ class Ad_Page(object):
 	disable_ad_manager = True
 	page_ads = {}
 
-	def __init__(self, settings={}, site=None, zone=None, network_code="", default_render_js=None, disable_ad_manager=None, ad_attributes={}, *args, **kwargs):
+	def __init__(self, settings={}, site=None, zone=None, network_code="", default_render_js=None, disable_ad_manager=None, ad_attributes={}, ad_settings={}, *args, **kwargs):
 		""" 
 		Ad page attributes that are configured here:
 			site - DART site - string
@@ -150,10 +150,11 @@ class Ad_Page(object):
 			Kwargs are passed to DART string. Can be any key, value pair - dict
 			
 		"""
-		DART_AD_DEFAULTS.update(settings)
+		temp_default = DART_AD_DEFAULTS
+		temp_default.update(settings)
 		
-		for setting in DART_AD_DEFAULTS:
-			self.__setattr__(setting, DART_AD_DEFAULTS[setting])
+		for setting in temp_default:
+			self.__setattr__(setting, temp_default[setting])
 		
 		
 		if site: self.site = site
@@ -166,6 +167,8 @@ class Ad_Page(object):
 	
 		if ad_attributes:
 			self.ad_attributes.update(ad_attributes)
+		if ad_settings:
+			self.ad_attributes.update(ad_settings)
 		
 		# Pre-load all of the ads for the page into a dict
 		#if not self.disable_ad_manager:
