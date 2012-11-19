@@ -32,7 +32,6 @@ def dart_sync(zones=None):
 			
 			res = conn.getresponse()
 			if res.status == 200:
-				dart_status = True
 				response = res.read()
 
 				# if dart returns a blank image or document.write("");, there is no ad available, update its status				
