@@ -8,20 +8,21 @@ from time import mktime
 from datetime import datetime
 
 
-
-CUSTOM_AD_TYPES = (
-	(0, "Custom HTML"),
-	(1, "Image/URL")
-)
+# DART-related constants that can be adjusted in site settings
 
 DART_DOMAIN = getattr(settings, "DART_DOMAIN", "ad.doubleclick.net")
 
+# Dictionary that sets defaults for ad settings
 DART_AD_DEFAULTS = getattr(settings, "DART_AD_DEFAULTS", settings.DART_AD_DEFAULTS)
 
+# If using ad network codes
 DART_NETWORK_CODE = getattr(settings, "DART_NETWORK_CODE", "")
 
 
 class Size(models.Model):
+	"""
+	Handles list of ad sizes that be allowed in a position.  Default list based on IAB standards is set in fixture
+	"""
 	name = models.CharField(max_length=255, null=False, blank=False) 
 	
 	width = models.PositiveSmallIntegerField(default=0, null=False, blank=False, help_text="Use zero for unknown/variable values")
@@ -36,6 +37,10 @@ class Size(models.Model):
 		return u"%sx%s" % (self.width, self.height)
 
 class Position(models.Model):
+	""" 
+	Model for handling ad positions that map to placements on the page
+	and the allowable sizes designated
+	"""
 
 	name = models.CharField(max_length=255, null=False, blank=False) 
 
@@ -55,6 +60,9 @@ class Position(models.Model):
 
 		
 class Zone(models.Model):
+	"""
+	Model for handling ad zones for the site and the allowable positions enabled for that position
+	"""
 
 	name = models.CharField(max_length=255) 
 
@@ -68,13 +76,17 @@ class Zone(models.Model):
 	def __unicode__(self):
 		return u"%s" % self.name		
 
+
 class Custom_Ad(models.Model):
+	"""
+	Custom ads served from the database, not DART, as either HTML, image/link, and/or plain text (for newsletters)
+	"""
 
 	name = models.CharField(max_length=255, default="")
 	
 	slug = models.CharField(max_length=255)
 	
-	type =  models.IntegerField(choices=CUSTOM_AD_TYPES, default=0)
+	type =  models.IntegerField(choices=((0, "Custom HTML"), (1, "Image/URL")), default=0)
 	
 	url = models.URLField(null=True, blank=True, help_text="Click tag URL")
 	
@@ -94,7 +106,9 @@ class Custom_Ad(models.Model):
 		return u"%s" % self.name
 		
 class Custom_Ad_Template(models.Model):
-	""" Templates for creating custom ads """
+	""" 
+	Templates for pre-defined HTML that can be loaded into a Custom Ad
+	"""
 	class Meta:
 		verbose_name = "Custom Ad Template"
 		verbose_name_plural = "Custom Ad Templates"
@@ -109,6 +123,10 @@ class Custom_Ad_Template(models.Model):
 	
 
 class Zone_Position(models.Model):
+	""" 
+	Through model that goes between Zone and Position to enable positions for a zone,
+	and set a Custom Ad for a Zone-Position
+	"""
 
 	position = models.ForeignKey(Position)
 	
@@ -127,7 +145,9 @@ class Zone_Position(models.Model):
 
 
 class Ad_Page(object):
-	""" Base class for ad settings on a page """
+	""" 
+	Base class for ad settings on a page and rendering ad tag HTML 
+	"""
 	
 	ad_attributes = {}
 	_tile = 0
@@ -272,7 +292,7 @@ class Ad_Page(object):
 			Optional:
 				ad -- A predefined ad, if needed - Ad object
 				custom_only -- Only deliver a custom ad, don't use DART - boolean
-				enable_ad_manager -- Override page settings and use the ad manager - boolean
+				enable_ad_manager -- Override Page settings and use the ad manager - boolean
 				omit_noscript -- Option to omit noscript tag (for ads without backup images)
 	
 			
@@ -285,7 +305,7 @@ class Ad_Page(object):
 		"""
 
 		# If ad manager is disabled, it goes straight to displaying the iframe/js code
-		if self.disable_ad_manager and not enable_ad_manager:	
+		if self.disable_ad_manager and not enable_ad_manager:
 			return self.render_default(pos, omit_noscript=omit_noscript, **kwargs)
 		else:
 		
