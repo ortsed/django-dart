@@ -10,9 +10,9 @@ setup(
     version="1.0",
     description='django-dart is a reusable Django application for DoubleClick ad tags',
     long_description=readme,
-    author='Josh West',
+    author='Llewellyn Hinkes-Jones',
     author_email='',
-    url='https://github.com/theatlantic/django-dart',
+    url='https://github.com/ortsed/django-dart',
     packages=find_packages(),
     classifiers=[
         'Environment :: Web Environment',

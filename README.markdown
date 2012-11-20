@@ -5,6 +5,9 @@ DoubleClick Ad Generator
 
 A simple Django application for generating DoubleClick adtags inside of Django templates.
 
+##Optional installation:
+	genericadmin: https://github.com/jschrewe/django-genericadmin
+
 ###Defaults
 Defaults are set inside of settings.py, and should at a minimum contain the 'site' and a default fallback zone
 

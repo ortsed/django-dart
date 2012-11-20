@@ -6,7 +6,8 @@ from django.conf import settings
 from settings import UPLOAD_PATH
 from time import mktime
 from datetime import datetime
-
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes import generic
 
 # DART-related constants that can be adjusted in site settings
 
@@ -44,7 +45,7 @@ class Position(models.Model):
 
 	name = models.CharField(max_length=255, null=False, blank=False) 
 
-	slug = models.CharField(max_length=255, null=False, blank=False)
+	slug = models.CharField(help_text="This will be the same field passed to DART as the position", max_length=255, null=False, blank=False)
 	
 	sizes = models.ManyToManyField("Size", null=False, blank=False)
 
@@ -66,10 +67,16 @@ class Zone(models.Model):
 
 	name = models.CharField(max_length=255) 
 
-	slug = models.CharField(max_length=255)
+	slug = models.CharField(help_text="This will be the same field passed to DART as the zone", max_length=255)
 	
 	position = models.ManyToManyField(Position, through="Zone_Position")
-
+	
+	content_type = models.ForeignKey(ContentType, blank=True, null=True, help_text="If the DART zone is associated with a particular object on the site, like a category, specify the content type and the object here")
+	
+	object_id = models.PositiveIntegerField("Object", blank=True, null=True)
+	
+	content_object = generic.GenericForeignKey("content_type", "object_id")
+	
 	class Meta:
 		verbose_name_plural = "Ad Zones"
 		
@@ -185,11 +192,15 @@ class Ad_Page(object):
 		if default_render_js: self.default_render_js = default_render_js
 		if disable_ad_manager: self.disable_ad_manager = disable_ad_manager
 	
+		
 		if ad_attributes:
 			self.ad_attributes.update(ad_attributes)
+			
+		# Support for legacy 'ad_settings' variable name
 		if ad_settings:
 			self.ad_attributes.update(ad_settings)
 		
+		# Preloader commented out because of possible caching conflicts
 		# Pre-load all of the ads for the page into a dict
 		#if not self.disable_ad_manager:
 		#	page_ads = Zone_Position.objects.all().filter(zone__slug__in=(self.zone,"ros"), enabled=True)
