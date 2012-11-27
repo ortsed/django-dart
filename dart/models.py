@@ -79,6 +79,7 @@ class Zone(models.Model):
 	
 	class Meta:
 		verbose_name_plural = "Ad Zones"
+		ordering = ["name"]
 		
 	def __unicode__(self):
 		return u"%s" % self.name		
@@ -149,7 +150,7 @@ class Zone_Position(models.Model):
 	class Meta:
 		verbose_name = "Enabled Position"
 		verbose_name_plural = "Enabled Positions"
-
+        ordering = ["zone__name"]
 
 class Ad_Page(object):
 	""" 
@@ -214,15 +215,17 @@ class Ad_Page(object):
 		return self._tile
 
 	
-	def has_ad(self, pos, custom_ad=False, **kwargs):
+	def has_ad(self, pos, custom_zone=None, custom_ad=False, **kwargs):
 		""" Doesn't render an ad, just checks for existence in ad manager """
-		try:
-			qs = Zone_Position.objects.all().filter(position__slug=pos, zone__slug__in=(self.zone,"ros"), enabled=True)
-			if custom_ad:
-				qs = qs.filter(custom_ad__isnull=False)
-			return qs[0]
-		except:
-			return None
+		
+		zone = custom_zone if custom_zone else self.zone
+		
+		qs = Zone_Position.objects.all().filter(position__slug=pos, zone__slug__in=(zone, "ros"), enabled=True)
+		if custom_ad:
+			qs = qs.filter(custom_ad__isnull=False)
+		
+		return qs.exists()
+
 			
 	def get_custom_ad(self, slug, pos, **kwargs):
 		""" Gets custom ad code if it exists """
