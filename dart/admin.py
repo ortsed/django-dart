@@ -11,7 +11,7 @@ except:
 		
 class Zone_PositionInline(admin.TabularInline):
 	model = Zone.position.through
-
+	ordering = ("position__name",)
 
 	
 class Zone_Admin(GenericAdminModelAdmin):
@@ -42,9 +42,15 @@ class Zone_Admin(GenericAdminModelAdmin):
 class Size_Admin(admin.ModelAdmin):
 	ordering = ("name",)
 
+
+class Zone_Inline(admin.TabularInline):
+	model = Zone.position.through
+	verbose_name = "Enabled Zones"
+	verbose_name_plural = "Enabled Zones"
+
 class Position_Admin(admin.ModelAdmin):
 	prepopulated_fields = {"slug" : ("name",)}
-	
+	ordering = ("name",)
 	class Media:
 		
 		js = (
@@ -56,6 +62,11 @@ class Position_Admin(admin.ModelAdmin):
 			"fields": ("name", "slug", "sizes", )
 		}),
 	)
+	
+	inlines = [
+		Zone_Inline,
+		
+	]
 
 class Custom_Ad_Template_Admin(admin.ModelAdmin):
 	pass	
