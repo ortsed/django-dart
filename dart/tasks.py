@@ -1,7 +1,7 @@
 import httplib, re
 from django.conf import settings
 from dart.models import Zone, DART_DOMAIN, Ad_Page
-
+from settings import DEBUG
 
 
 
@@ -21,11 +21,13 @@ def dart_sync(zones=None, user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.
 			conn = httplib.HTTPConnection(DART_DOMAIN)
 			size = position.position.size_list
 			pos = position.position.slug
-			zone = zone.slug 
-			ad_page = Ad_Page(zone=zone, *args, **kwargs)
+			ad_page = Ad_Page(zone=zone.slug, *args, **kwargs)
 			
 			url = ad_page.js_url(pos, with_ord=True, size=size) 
-
+			
+			
+			#if DEBUG: print url
+			
 			# HTTP request of a DART tag to DART server falsifying a browser request
 			conn.request(
 				"GET",
@@ -44,7 +46,8 @@ def dart_sync(zones=None, user_agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.
 				# if dart returns a blank image or document.write("");, there is no ad available, update its status				
 				if re.search(r"grey\.gif", response) or response.strip() == "document.write("");":
 					position.enabled = False
+					#if DEBUG: print "Position: disabled"
 				else:
 					position.enabled = True
-					
+					#if DEBUG: print "Position: enabled"
 				position.save()
