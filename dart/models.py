@@ -213,18 +213,28 @@ class Ad_Page(object):
 		""" Gets and increments the tile position for the page """
 		self._tile = self._tile + 1
 		return self._tile
-
-	
-	def has_ad(self, pos, custom_zone=None, custom_ad=False, **kwargs):
-		""" Doesn't render an ad, just checks for existence in ad manager """
 		
+	def _query_ad(self, pos, custom_zone=None, custom_ad=False, **kwargs):
+		""" Creates queryset for an ad in ad_manager. Used by has_ad and get_ad """
 		zone = custom_zone if custom_zone else self.zone
 		
 		qs = Zone_Position.objects.all().filter(position__slug=pos, zone__slug__in=(zone, "ros"), enabled=True)
 		if custom_ad:
 			qs = qs.filter(custom_ad__isnull=False)
-		
-		return qs.exists()
+			
+		return qs
+
+	def get_ad(self, *args, **kwargs):
+		""" Gets ad from ad_manager, None otherwise """
+		qs = self._query_ad(*args, **kwargs)
+		if qs.exists():
+			return qs[0]
+		else:
+			return None
+			
+	def has_ad(self, *args, **kwargs):
+		""" Doesn't render an ad, just checks for existence in ad manager """
+		return self._query_ad(*args, **kwargs).exists()
 
 			
 	def get_custom_ad(self, slug, pos, **kwargs):
@@ -272,6 +282,7 @@ class Ad_Page(object):
 			"desc_text": desc_text,
 			"pos": pos,
             "omit_noscript": omit_noscript,
+            "kwargs": kwargs,
 		}
 
 		t = loader.get_template(template)
@@ -329,7 +340,7 @@ class Ad_Page(object):
 				# if no ad info, get ad info
 				
 				if enable_ad_manager and not self.page_ads:
-					ad = self.has_ad(pos, **kwargs)
+					ad = self.get_ad(pos, **kwargs)
 				elif pos in self.page_ads:
 					ad = self.page_ads[pos]
 				
@@ -371,8 +382,11 @@ class Ad_Page(object):
 		# legacy catch in now that size is in ad_attributes
 		if "size" in kwargs:
 			attrs["size"] = kwargs["size"]
+		
+		
+		zone = kwargs["custom_zone"] if "custom_zone" in kwargs else self.zone
 	
-		url = "%s/%s;" % (self.site, self.zone)
+		url = "%s/%s;" % (self.site, zone)
 
 		for attr, val in attrs.items():
 			if attr == "title":
