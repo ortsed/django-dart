@@ -19,6 +19,9 @@ DART_AD_DEFAULTS = getattr(settings, "DART_AD_DEFAULTS", settings.DART_AD_DEFAUL
 # If using ad network codes
 DART_NETWORK_CODE = getattr(settings, "DART_NETWORK_CODE", "")
 
+# If enabled shows cats from placekitten.com instead of ads for testing
+DART_PLACEHOLDER_MODE = getattr(settings, "DART_PLACEHOLDER_MODE", False)
+
 
 class Size(models.Model):
 	"""
@@ -56,8 +59,12 @@ class Position(models.Model):
 		return u"%s" % self.name
 		
 	@property
-	def size_list(self):
+	def size_list_string(self):
 		return ",".join([size.dart_formatted_size for size in self.sizes.all()])
+		
+	@property
+	def size_list(self):
+		return [(size.width, size.height) for size in self.sizes.all()]
 
 		
 class Zone(models.Model):
@@ -301,6 +308,28 @@ class Ad_Page(object):
 			return self.render_js_ad(pos, omit_noscript=omit_noscript, **kwargs)
 		else:
 			return ""
+	
+	def render_placeholder(self, ad, **kwargs):
+		""" 
+			Renders an image placeholder to test ad placements
+		"""
+		size = ad.position.size_list[0]
+		image_url = u"http://placehold.it/%sx%s" % (size[0], size[1])
+		#image_url = u"http://placekitten.com/%s/%s" % (size[0], size[1])
+		
+		context_vars = {
+			"image_url": image_url,
+			"pos": ad.position.slug,
+			"width": size[0],
+			"height": size[1],
+            "kwargs": kwargs,
+		}
+
+		t = loader.get_template("dart/placeholder.html")
+		c = Context(context_vars)
+		return t.render(c)
+		
+	
 
 	def get(self, pos, ad=None, enable_ad_manager=None, omit_noscript=False, **kwargs):
 		return self.render_ad(pos, ad, enable_ad_manager, omit_noscript=omit_noscript, **kwargs)
@@ -329,19 +358,27 @@ class Ad_Page(object):
 		
 		"""
 
+		# If kitten mode, just show those ads
+		if DART_PLACEHOLDER_MODE:
+			ad = self.get_ad(pos, **kwargs)
+			if ad:
+				return self.render_placeholder(ad, **kwargs)
+			else:
+				return ""
+				
 		# If ad manager is disabled, it goes straight to displaying the iframe/js code
 		if self.disable_ad_manager and not enable_ad_manager:
 			return self.render_default(pos, omit_noscript=omit_noscript, **kwargs)
 		else:
-		
-			# using the ad manager
-		
+		# using the ad manager
+			
+			# if no ad info, get ad info
 			if not ad:
-				# if no ad info, get ad info
-				
 				if enable_ad_manager and not self.page_ads:
+					# if ad is not pre-loaded, get the ad from the DB
 					ad = self.get_ad(pos, **kwargs)
 				elif pos in self.page_ads:
+					# get pre-loaded ad
 					ad = self.page_ads[pos]
 				
 			if ad and ad.custom_ad:
@@ -351,7 +388,7 @@ class Ad_Page(object):
 			elif ad and not ad.custom_ad:
 				# if we have an ad
 				if "size" not in kwargs:
-					kwargs["size"] = ad.position.size_list
+					kwargs["size"] = ad.position.size_list_string
 				return self.render_js_ad(pos, omit_noscript=omit_noscript, **kwargs)
 			else:
 				return self.render_default(pos, omit_noscript=omit_noscript, **kwargs)

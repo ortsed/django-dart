@@ -1,6 +1,4 @@
 from coffin.conf.urls.defaults import *
-import os
-from django.views.static import serve
 
 urlpatterns = patterns("dart.views",
 

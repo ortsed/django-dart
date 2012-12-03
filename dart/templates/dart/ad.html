@@ -15,12 +15,12 @@ document.write('<' + 'script type="text/javascript" src="' + this_ad_link + '">'
 //]]>
 		</script>
 
-    {% if not omit_noscript %}
-      <noscript>
-      <a href="{{ link_url }}" title="">
-        <img src="{{ image_url }}" alt="" />
-      </a>
-      </noscript>
-    {% endif %}
+	{% if not omit_noscript %}
+	  <noscript>
+	  <a href="{{ link_url }}" title="">
+		<img src="{{ image_url }}" alt="" />
+	  </a>
+	  </noscript>
+	{% endif %}
 	</div>
 </div>
