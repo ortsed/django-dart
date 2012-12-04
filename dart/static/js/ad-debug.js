@@ -10,6 +10,10 @@ function ad_focus(id){
 	$(debug_object).addClass("highlighted-ad");
 }
 
+function ad_debug_close_layer(obj){
+	$(obj).parent().hide();
+}
+
 $(document).ready(function(){
 	$("body").keypress(function(event){
 		//Toggled by cntrl-F10 or cntrl-b
@@ -43,6 +47,14 @@ $(document).ready(function(){
 	margin-bottom:10px;\
 	padding: 5px;\
 	backgorund-color:#eeeeee;\
+}\
+.ad-debug-layer-close {\
+	display:block;\
+	float: right;\
+	width:10px;\
+	border-left:1px solid #000000;\
+	border-bottom:1px solid #000000;\
+	padding:0 3px;\
 }\
 </style>\
 ");
@@ -115,7 +127,7 @@ $(document).ready(function(){
 					}
 					var position = param_dict["pos"];
 					
-					$("body").append("<div class=\"ad-debug-layer\" id=\"" + $(this).attr("id") + "_debug_layer\" style=\"top:" + top + "px;left:" + left + "px;width:" + width + "px;height:" + height + "px;\"><b>" + zone + ": " + param_dict["pos"] + "</b><br />" + param_dict["sz"] + "<\/div>");
+					$("body").append("<div class=\"ad-debug-layer\" id=\"" + $(this).attr("id") + "_debug_layer\" style=\"top:" + top + "px;left:" + left + "px;width:" + width + "px;height:" + height + "px;\"><a href=\"#\" class=\"ad-debug-layer-close\" onclick=\"ad_debug_close_layer(this);\">X</a><b>" + zone + ": " + param_dict["pos"] + "</b><br />" + param_dict["sz"] + "<\/div>");
 					
 					$(".ad-debug-panel").append("<ul class=\"ad-debug-panel-pane\">\
 					<li><b>Zone/Position:</b> " + zone + " - " + position  + "</li>\
