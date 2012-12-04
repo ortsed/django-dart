@@ -42,6 +42,22 @@ class Size(models.Model):
 	def dart_formatted_size(self):
 		return u"%sx%s" % (self.width, self.height)
 
+class Dart_Site(models.Model):
+	""" DART site value that can be associated with a Django Site """
+	
+	name = models.CharField(max_length=255, null=False, blank=False) 
+
+	slug = models.CharField(help_text="This will be the same field passed to DART as the site", max_length=255, null=False, blank=False)
+	
+	site = models.ForeignKey(Site, blank=True)
+	
+	class Meta:
+		verbose_name_plural = "Sites"
+		verbose_name = "Site"
+		
+	def __unicode__(self, *args, **kwargs):
+		return self.name
+
 class Position(models.Model):
 	""" 
 	Model for handling ad positions that map to placements on the page
@@ -78,15 +94,9 @@ class Zone(models.Model):
 
 	slug = models.CharField(help_text="This will be the same field passed to DART as the zone", max_length=255)
 	
-	site = models.ManyToManyField(Site)
+	site = models.ManyToManyField(Dart_Site, blank=True)
 	
 	position = models.ManyToManyField(Position, through="Zone_Position")
-	
-	content_type = models.ForeignKey(ContentType, blank=True, null=True, help_text="If the DART zone is associated with a particular object on the site, like a category, specify the content type and the object here")
-	
-	object_id = models.PositiveIntegerField("Object", blank=True, null=True)
-	
-	content_object = generic.GenericForeignKey("content_type", "object_id")
 	
 	class Meta:
 		verbose_name_plural = "Ad Zones"

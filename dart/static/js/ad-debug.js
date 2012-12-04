@@ -75,6 +75,7 @@ $(document).ready(function(){
 					if ($(this).height() == 0){
 						var ad_loaded = false
 						$(this).height("100px");
+						$(this).css("min-width", "100px");
 						var height = 100;
 						var width = 100;
 					}else{

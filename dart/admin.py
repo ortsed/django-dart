@@ -1,20 +1,14 @@
 from django.contrib import admin
 from settings import ADMIN_MEDIA_PREFIX, STANDARD_ADMIN_MEDIA_PREFIX
-from dart.models import Zone, Position, Custom_Ad, Custom_Ad_Template, Zone_Position, Size
+from dart.models import Zone, Position, Custom_Ad, Custom_Ad_Template, Zone_Position, Size, Dart_Site
 from settings import STATIC_URL
-
-try:
-	from genericadmin.admin import GenericAdminModelAdmin
-except:
-	class GenericAdminModelAdmin(admin.ModelAdmin):
-		pass
 		
 class Zone_PositionInline(admin.TabularInline):
 	model = Zone.position.through
 	ordering = ("position__name",)
 
 	
-class Zone_Admin(GenericAdminModelAdmin):
+class Zone_Admin(admin.ModelAdmin):
 	ordering = ("name",)
 	prepopulated_fields = {"slug" : ("name",)}
 	
@@ -29,9 +23,6 @@ class Zone_Admin(GenericAdminModelAdmin):
 	fieldsets = (
 		(None, {
 			"fields": ("name", "slug", "site"),
-		}),
-		("Associated Content", {
-			"fields": ("content_type", "object_id",)
 		}),
 	)
 	inlines = [
@@ -67,6 +58,16 @@ class Position_Admin(admin.ModelAdmin):
 		Zone_Inline,
 		
 	]
+	
+class Dart_Site_Admin(admin.ModelAdmin):
+	prepopulated_fields = {"slug" : ("name",)}
+	ordering = ("name",)
+	
+	fieldsets = (
+		(None, {
+			"fields": ("name", "slug", "site", )
+		}),
+	)
 
 class Custom_Ad_Template_Admin(admin.ModelAdmin):
 	pass	
@@ -101,6 +102,7 @@ class Custom_Ad_Admin(admin.ModelAdmin):
 		}),
 	)
 
+admin.site.register(Dart_Site, Dart_Site_Admin)
 admin.site.register(Zone, Zone_Admin)
 admin.site.register(Custom_Ad, Custom_Ad_Admin)
 admin.site.register(Custom_Ad_Template, Custom_Ad_Template_Admin)
