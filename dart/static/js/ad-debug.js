@@ -60,16 +60,34 @@ $(document).ready(function(){
 				$("body").append("<div class=\"ad-debug-panel\"></div>");
 				
 				$(".ad").each(function(){
-				
+					
+					//give the ad an id if it doesnt have one
 					if ($(this).attr("id") == ""){
 						$(this).attr("id", "ad_debug_" + Math.rand());
+						
+					}
+					
+					if (! $(this).is(":visible")){
+						$(this).show();
+					}
+					
+					//Check for unloaded ads, give them a minimum value
+					if ($(this).height() == 0){
+						var ad_loaded = false
+						$(this).height("100px");
+						var height = 100;
+						var width = 100;
+					}else{
+						var ad_loaded = true;
+						var height = $(this).height();
+						var width = $(this).width();
 					}
 					
 					var position = $(this).offset();
 					var top = position.top;
 					var left = position.left;
-					var width = $(this).width();
-					var height = $(this).height();
+					
+					
 					
 					var url = $(this).find("script").eq(1).attr("src");
 					
@@ -99,11 +117,11 @@ $(document).ready(function(){
 					$("body").append("<div class=\"ad-debug-layer\" id=\"" + $(this).attr("id") + "_debug_layer\" style=\"top:" + top + "px;left:" + left + "px;width:" + width + "px;height:" + height + "px;\"><b>" + zone + ": " + param_dict["pos"] + "</b><br />" + param_dict["sz"] + "<\/div>");
 					
 					$(".ad-debug-panel").append("<ul class=\"ad-debug-panel-pane\">\
+					<li><b>Zone/Position:</b> " + zone + " - " + position  + "</li>\
+					<li><b>Ad loaded:</b> " + ad_loaded + "</li>\
 					<li><b>Site:</b> " + site  + "</li>\
 					<li><b>Domain:</b> " + domain + "</li>\
 					<li><b>Network:</b> " + network  + "</li>\
-					<li><b>Zone:</b> " + zone + "</li>\
-					<li><b>Position:</b> " + position  + "</li>\
 					<li><b>Params:</b> " + params + "</li>\
 					<li><b>URL:</b> " + url + "</li>\
 					<li><a href=\"#" + $(this).attr("id") + "\" onclick=\"ad_focus('" + $(this).attr("id") + "')\">Highlight</a></li>\
