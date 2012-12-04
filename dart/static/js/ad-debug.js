@@ -12,8 +12,8 @@ function ad_focus(id){
 
 $(document).ready(function(){
 	$("body").keypress(function(event){
-		//Toggled by cntrl-F10
-		if (event.which == 63245){
+		//Toggled by cntrl-F10 or cntrl-b
+		if ((event.which == 63245) || (event.which == 2)){
 			
 			$("body").append("\
 <style type=\"text/css\">\
