@@ -28,7 +28,7 @@ class Zone_Admin(GenericAdminModelAdmin):
 	
 	fieldsets = (
 		(None, {
-			"fields": ("name", "slug",),
+			"fields": ("name", "slug", "site"),
 		}),
 		("Associated Content", {
 			"fields": ("content_type", "object_id",)

@@ -8,6 +8,8 @@ from time import mktime
 from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
+from django.contrib.sites.models import Site
+
 
 # DART-related constants that can be adjusted in site settings
 
@@ -72,9 +74,11 @@ class Zone(models.Model):
 	Model for handling ad zones for the site and the allowable positions enabled for that position
 	"""
 
-	name = models.CharField(max_length=255) 
+	name = models.CharField(max_length=255)
 
 	slug = models.CharField(help_text="This will be the same field passed to DART as the zone", max_length=255)
+	
+	site = models.ManyToManyField(Site)
 	
 	position = models.ManyToManyField(Position, through="Zone_Position")
 	
