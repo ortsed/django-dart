@@ -54,7 +54,7 @@ class Site(models.Model):
 		verbose_name = "Site"
 		
 	def __unicode__(self, *args, **kwargs):
-		return self.name
+		return self.slug
 
 class Position(models.Model):
 	""" 
