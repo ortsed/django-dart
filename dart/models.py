@@ -8,7 +8,7 @@ from time import mktime
 from datetime import datetime
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes import generic
-from django.contrib.sites.models import Site
+from django.contrib.sites.models import Site as Django_Site
 
 
 # DART-related constants that can be adjusted in site settings
@@ -42,14 +42,14 @@ class Size(models.Model):
 	def dart_formatted_size(self):
 		return u"%sx%s" % (self.width, self.height)
 
-class Dart_Site(models.Model):
+class Site(models.Model):
 	""" DART site value that can be associated with a Django Site """
 	
 	name = models.CharField(max_length=255, null=False, blank=False) 
 
 	slug = models.CharField(help_text="This will be the same field passed to DART as the site", max_length=255, null=False, blank=False)
 	
-	site = models.ForeignKey(Site, blank=True)
+	site = models.ForeignKey(Django_Site, blank=True)
 	
 	class Meta:
 		verbose_name_plural = "Sites"
@@ -94,7 +94,7 @@ class Zone(models.Model):
 
 	slug = models.CharField(help_text="This will be the same field passed to DART as the zone", max_length=255)
 	
-	site = models.ManyToManyField(Dart_Site, blank=True)
+	site = models.ManyToManyField(Site, blank=True)
 	
 	position = models.ManyToManyField(Position, through="Zone_Position")
 	
