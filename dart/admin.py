@@ -1,6 +1,6 @@
 from django.contrib import admin
 from settings import ADMIN_MEDIA_PREFIX, STANDARD_ADMIN_MEDIA_PREFIX
-from dart.models import Zone, Position, Custom_Ad, Custom_Ad_Template, Zone_Position, Size, Dart_Site
+from dart.models import Zone, Position, Custom_Ad, Custom_Ad_Template, Zone_Position, Size, Site
 from settings import STATIC_URL
 		
 class Zone_PositionInline(admin.TabularInline):
@@ -59,7 +59,7 @@ class Position_Admin(admin.ModelAdmin):
 		
 	]
 	
-class Dart_Site_Admin(admin.ModelAdmin):
+class Site_Admin(admin.ModelAdmin):
 	prepopulated_fields = {"slug" : ("name",)}
 	ordering = ("name",)
 	
@@ -102,7 +102,7 @@ class Custom_Ad_Admin(admin.ModelAdmin):
 		}),
 	)
 
-admin.site.register(Dart_Site, Dart_Site_Admin)
+admin.site.register(Site, Site_Admin)
 admin.site.register(Zone, Zone_Admin)
 admin.site.register(Custom_Ad, Custom_Ad_Admin)
 admin.site.register(Custom_Ad_Template, Custom_Ad_Template_Admin)
