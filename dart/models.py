@@ -225,11 +225,15 @@ class Ad_Page(object):
 		self._tile = self._tile + 1
 		return self._tile
 		
-	def _query_ad(self, pos, custom_zone=None, custom_ad=False, **kwargs):
+	def _query_ad(self, pos, site=None, custom_zone=None, custom_ad=False, **kwargs):
 		""" Creates queryset for an ad in ad_manager. Used by has_ad and get_ad """
 		zone = custom_zone if custom_zone else self.zone
 		
 		qs = Zone_Position.objects.all().filter(position__slug=pos, zone__slug__in=(zone, "ros"), enabled=True)
+		
+		if site:
+			qs = qs.filter(zone__site__name=site)
+		
 		if custom_ad:
 			qs = qs.filter(custom_ad__isnull=False)
 			
