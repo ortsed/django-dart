@@ -44,8 +44,6 @@ class Size(models.Model):
 
 class Site(models.Model):
 	""" DART site value that can be associated with a Django Site """
-	
-	name = models.CharField(max_length=255, null=False, blank=False) 
 
 	slug = models.CharField(help_text="This will be the same field passed to DART as the site", max_length=255, null=False, blank=False)
 	
@@ -242,7 +240,7 @@ class Ad_Page(object):
 		qs = Zone_Position.objects.all().filter(position__slug=pos, zone__slug__in=(zone, "ros"), enabled=True)
 		
 		if site:
-			qs = qs.filter(zone__site__name=site)
+			qs = qs.filter(zone__site__slug=site)
 		
 		if custom_ad:
 			qs = qs.filter(custom_ad__isnull=False)

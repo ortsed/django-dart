@@ -60,12 +60,11 @@ class Position_Admin(admin.ModelAdmin):
 	]
 	
 class Site_Admin(admin.ModelAdmin):
-	prepopulated_fields = {"slug" : ("name",)}
-	ordering = ("name",)
+	ordering = ("slug",)
 	
 	fieldsets = (
 		(None, {
-			"fields": ("name", "slug", "site", )
+			"fields": ("slug", "site", )
 		}),
 	)
 
