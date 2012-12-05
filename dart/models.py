@@ -199,8 +199,9 @@ class Ad_Page(object):
 			Kwargs are passed to DART string. Can be any key, value pair - dict
 			
 		"""
-		temp_default = DART_AD_DEFAULTS.copy()
-		temp_default.update(settings)
+		temp_default = DART_AD_DEFAULTS.copy() if DART_AD_DEFAULTS else {}
+		if settings:
+			temp_default.update(settings)
 		
 		for setting in temp_default:
 			self.__setattr__(setting, temp_default[setting])
