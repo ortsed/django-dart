@@ -164,8 +164,10 @@ class Zone_Position(models.Model):
 	enabled = models.BooleanField(default=True)
 	
 	def __unicode__(self):
-		return u"%s: %s" % (self.zone, self.position)
-	
+		try:
+			return u"%s: %s" % (self.zone, self.position)
+		except:
+			import ipdb;ipdb.set_trace()
 	class Meta:
 		verbose_name = "Enabled Position"
 		verbose_name_plural = "Enabled Positions"
@@ -256,6 +258,7 @@ class Ad_Page(object):
 			return None
 			
 	def has_ad(self, *args, **kwargs):
+		
 		""" Doesn't render an ad, just checks for existence in ad manager """
 		return self._query_ad(*args, **kwargs).exists()
 
@@ -330,11 +333,9 @@ class Ad_Page(object):
 			Renders an image placeholder to test ad placements
 		"""
 		size = ad.position.size_list[0]
-		image_url = u"http://placehold.it/%sx%s" % (size[0], size[1])
-		#image_url = u"http://placekitten.com/%s/%s" % (size[0], size[1])
 		
 		context_vars = {
-			"image_url": image_url,
+			"js_url": self.js_url(ad.position.slug, **kwargs),
 			"pos": ad.position.slug,
 			"width": size[0],
 			"height": size[1],
