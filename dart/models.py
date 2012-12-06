@@ -454,7 +454,6 @@ class Ad_Page(object):
 			# if it is a non-string iteratible object
 			if hasattr(val, "__iter__"):
 				val = ",".join(val)
-				
 			if attr not in ["size", "sz"]:
 				val = slugify(val)
 				

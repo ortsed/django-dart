@@ -24,7 +24,7 @@ def dart_sync(zones=None, *args, **kwargs):
 		positions = zone.zone_position_set.all()
 		for position in positions:
 		
-			size = position.position.size_list
+			size = position.position.size_list_string
 			pos = position.position.slug
 			ad_page = Ad_Page(zone=zone.slug, *args, **kwargs)	
 			url = ad_page.js_url(pos, with_ord=True, size=size) 
@@ -42,6 +42,7 @@ def dart_sync(zones=None, *args, **kwargs):
 					position.enabled = True
 					#if settings.DEBUG: print "Position: enabled"
 				position.save()
+	return True
 				
 def dart_request(url, user_agent=DEFAULT_BROWSER_AGENT, domain=DART_DOMAIN, *args, **kwargs):
 	""" 
