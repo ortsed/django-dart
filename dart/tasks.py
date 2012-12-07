@@ -32,7 +32,10 @@ def dart_sync(zones=None, debug_mode=False, *args, **kwargs):
 			
 			# Loop through all of the sites the zone is enabled for, and get the ad tag for each  
 			for site in zone.site.all():
-				ad_page.site = site
+				if settings.DEBUG:
+					ad_page.site = site.slug_dev
+				else:
+					ad_page.site = site.slug
 				
 				url = ad_page.js_url(pos, with_ord=True, size=size, ) 
 				

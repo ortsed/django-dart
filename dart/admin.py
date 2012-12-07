@@ -33,6 +33,8 @@ class Zone_Admin(admin.ModelAdmin):
 class Size_Admin(admin.ModelAdmin):
 	ordering = ("name",)
 	
+	
+	
 class Zone_Position_Admin(admin.ModelAdmin):
 	ordering = ("zone", "position")
 	list_display = ("zone", "position", "custom_ad", "enabled", "default_dart_tag")
@@ -74,7 +76,7 @@ class Site_Admin(admin.ModelAdmin):
 	
 	fieldsets = (
 		(None, {
-			"fields": ("slug", "site", )
+			"fields": ("slug", "slug_dev", "site", )
 		}),
 	)
 

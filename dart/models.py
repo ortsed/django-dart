@@ -45,7 +45,9 @@ class Size(models.Model):
 class Site(models.Model):
 	""" DART site value that can be associated with a Django Site """
 
-	slug = models.CharField(help_text="This will be the same field passed to DART as the site", max_length=255, null=False, blank=False)
+	slug = models.CharField("DART site handle", help_text="This is the same field passed to DART as the site", max_length=255, null=False, blank=False)
+	
+	slug_dev = models.CharField("DART development site handle", help_text="Development DART site handle to be used when DEBUG is enabled", max_length=255, null=False, blank=True)
 	
 	site = models.ForeignKey(Django_Site, blank=True)
 	
