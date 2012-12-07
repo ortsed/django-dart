@@ -30,32 +30,38 @@ def dart_sync(zones=None, debug_mode=False, *args, **kwargs):
 			
 			ad_page = Ad_Page(zone=zone.slug, *args, **kwargs)
 			
-			# Loop through all of the sites the zone is enabled for, and get the ad tag for each  
+			# Loop through all of the sites the zone is enabled for, and get the ad tag for each
+			temp_site = ""
+			
 			for site in zone.site.all():
 				if settings.DEBUG:
-					ad_page.site = site.slug_dev
+					site = site.slug_dev
 				else:
-					ad_page.site = site.slug
+					site = site.slug
 				
-				url = ad_page.js_url(pos, with_ord=True, size=size, ) 
-				
-				if debug_mode: print url
-				
-				res = dart_request(url, *args, **kwargs)
-				
-				#if settings.DEBUG: print u"Status:%s" % res.status
-				if res.status == 200:
-					response = res.read()
-	
-					# if dart returns a blank image or document.write("");, there is no ad available, update its status
-					#if settings.DEBUG: print response
-					if re.search(r"grey\.gif", response) or response.strip() == "document.write('');":
-						position.enabled = False
-						if debug_mode: print "Position: disabled"
-					else:
-						position.enabled = True
-						if debug_mode: print "Position: enabled"
-					position.save()
+				# A quick check to make sure the same site isn't being checked twice
+				if site != temp_site:
+					ad_page.site = site
+					
+					url = ad_page.js_url(pos, with_ord=True, size=size, ) 
+					
+					if debug_mode: print url
+					
+					res = dart_request(url, *args, **kwargs)
+					
+					#if settings.DEBUG: print u"Status:%s" % res.status
+					if res.status == 200:
+						response = res.read()
+		
+						# if dart returns a blank image or document.write("");, there is no ad available, update its status
+						#if settings.DEBUG: print response
+						if re.search(r"grey\.gif", response) or response.strip() == "document.write('');":
+							position.enabled = False
+							if debug_mode: print "Position: disabled"
+						else:
+							position.enabled = True
+							if debug_mode: print "Position: enabled"
+						position.save()
 	return True
 				
 def dart_request(url, user_agent=DEFAULT_BROWSER_AGENT, domain=DART_DOMAIN, *args, **kwargs):
