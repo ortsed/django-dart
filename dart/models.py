@@ -164,13 +164,11 @@ class Zone_Position(models.Model):
 	enabled = models.BooleanField(default=True)
 	
 	def default_dart_tag(self):
-		return Ad_Page().js_url(self.position.slug)
+		return Ad_Page().js_url(self.position.slug, size=self.position.sizes.all()[0].dart_formatted_size)
 	
 	def __unicode__(self):
-		try:
-			return u"%s: %s" % (self.zone, self.position)
-		except:
-			import ipdb;ipdb.set_trace()
+		return u"%s: %s" % (self.zone, self.position)
+
 	class Meta:
 		verbose_name = "Enabled Position"
 		verbose_name_plural = "Enabled Positions"
