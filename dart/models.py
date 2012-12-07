@@ -163,6 +163,9 @@ class Zone_Position(models.Model):
 	
 	enabled = models.BooleanField(default=True)
 	
+	def default_dart_tag(self):
+		return Ad_Page().js_url(self.position.slug)
+	
 	def __unicode__(self):
 		try:
 			return u"%s: %s" % (self.zone, self.position)

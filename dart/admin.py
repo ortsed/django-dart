@@ -35,7 +35,13 @@ class Size_Admin(admin.ModelAdmin):
 	
 class Zone_Position_Admin(admin.ModelAdmin):
 	ordering = ("zone", "position")
-	list_display = ("zone", "position", "custom_ad", "enabled")
+	list_display = ("zone", "position", "custom_ad", "enabled", "default_dart_tag")
+	
+	fieldsets = (
+		(None, {
+			"fields": ("zone", "position", "custom_ad", "enabled")
+		}),
+	)
 
 
 class Zone_Inline(admin.TabularInline):
