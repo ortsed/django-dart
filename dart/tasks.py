@@ -7,13 +7,14 @@ import settings
 DEFAULT_BROWSER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"
 
 
-def dart_sync(zones=None, *args, **kwargs):
+def dart_sync(zones=None, debug_mode=False, *args, **kwargs):
 	""" 
 	Loops through all zones and positions and get's their status in doubleclick
 	then updates the local database with the result.
 	
 	If zone value is passed, then it only loops through that custom list of zones
 	"""
+	
 	if not zones:
 		zones = Zone.objects.all()
 		site_id = getattr(settings, "SITE_ID", None)
@@ -29,18 +30,22 @@ def dart_sync(zones=None, *args, **kwargs):
 			ad_page = Ad_Page(zone=zone.slug, *args, **kwargs)	
 			url = ad_page.js_url(pos, with_ord=True, size=size) 
 			
+			if debug_mode: print url
+			
 			res = dart_request(url, *args, **kwargs)
-
+			
+			#if settings.DEBUG: print u"Status:%s" % res.status
 			if res.status == 200:
 				response = res.read()
 
-				# if dart returns a blank image or document.write("");, there is no ad available, update its status				
-				if re.search(r"grey\.gif", response) or response.strip() == "document.write("");":
+				# if dart returns a blank image or document.write("");, there is no ad available, update its status
+				#if settings.DEBUG: print response
+				if re.search(r"grey\.gif", response) or response.strip() == "document.write('');":
 					position.enabled = False
-					#if settings.DEBUG: print "Position: disabled"
+					if debug_mode: print "Position: disabled"
 				else:
 					position.enabled = True
-					#if settings.DEBUG: print "Position: enabled"
+					if debug_mode: print "Position: enabled"
 				position.save()
 	return True
 				
@@ -58,5 +63,6 @@ def dart_request(url, user_agent=DEFAULT_BROWSER_AGENT, domain=DART_DOMAIN, *arg
 			"User-Agent": user_agent
 		}
 	)
+	
 	return conn.getresponse()
 	
