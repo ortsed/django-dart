@@ -32,6 +32,10 @@ class Zone_Admin(admin.ModelAdmin):
 
 class Size_Admin(admin.ModelAdmin):
 	ordering = ("name",)
+	
+class Zone_Position_Admin(admin.ModelAdmin):
+	ordering = ("zone", "position")
+	list_display = ("zone", "position", "custom_ad", "enabled")
 
 
 class Zone_Inline(admin.TabularInline):
@@ -102,6 +106,7 @@ class Custom_Ad_Admin(admin.ModelAdmin):
 	)
 
 admin.site.register(Site, Site_Admin)
+admin.site.register(Zone_Position, Zone_Position_Admin)
 admin.site.register(Zone, Zone_Admin)
 admin.site.register(Custom_Ad, Custom_Ad_Admin)
 admin.site.register(Custom_Ad_Template, Custom_Ad_Template_Admin)
