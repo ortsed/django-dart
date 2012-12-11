@@ -17,9 +17,9 @@ def dart_sync(zones=None, debug_mode=False, *args, **kwargs):
 	
 	if not zones:
 		zones = Zone.objects.all()
-		site_id = getattr(settings, "SITE_ID", None)
-		if site_id:
-			zones = zones.filter(site__site=site_id)
+		#site_id = getattr(settings, "SITE_ID", None)
+		#if site_id:
+		#	zones = zones.filter(site__site=site_id)
 
 	for zone in zones:
 		positions = zone.zone_position_set.all()
