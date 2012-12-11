@@ -165,6 +165,8 @@ class Zone_Position(models.Model):
 	
 	enabled = models.BooleanField(default=True)
 	
+	sync = models.BooleanField(default=True, help_text="Determines whether the position is synced with DART when sync task is run.  Otherwise enabled manually.")
+	
 	def default_dart_tag(self):
 		return Ad_Page().js_url(self.position.slug, size=self.position.sizes.all()[0].dart_formatted_size)
 	

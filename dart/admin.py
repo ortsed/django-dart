@@ -26,8 +26,7 @@ class Zone_Admin(admin.ModelAdmin):
 		}),
 	)
 	inlines = [
-		Zone_PositionInline,
-		
+		Zone_PositionInline,	
 	]
 
 class Size_Admin(admin.ModelAdmin):
@@ -37,11 +36,12 @@ class Size_Admin(admin.ModelAdmin):
 	
 class Zone_Position_Admin(admin.ModelAdmin):
 	ordering = ("zone", "position")
+	
 	list_display = ("zone", "position", "custom_ad", "enabled", "default_dart_tag")
 	
 	fieldsets = (
 		(None, {
-			"fields": ("zone", "position", "custom_ad", "enabled")
+			"fields": ("zone", "position", "custom_ad", "enabled", "sync")
 		}),
 	)
 
@@ -68,7 +68,6 @@ class Position_Admin(admin.ModelAdmin):
 	
 	inlines = [
 		Zone_Inline,
-		
 	]
 	
 class Site_Admin(admin.ModelAdmin):

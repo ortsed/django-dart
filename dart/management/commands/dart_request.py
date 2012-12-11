@@ -4,7 +4,7 @@ from optparse import make_option
 from urlparse import urlparse
 
 class Command(BaseCommand):
-	help = "Makes a URL request to DART and prints the resulting HTML"
+	help = "Makes a URL request to DART and prints the resulting HTML.  Wrap URLs in quotation marks to ensure that semicolons are not mistaken for separate bash commands"
 
 	
 	def handle(self, *args, **kwargs):

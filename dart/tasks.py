@@ -15,6 +15,8 @@ def dart_sync(zones=None, debug_mode=False, *args, **kwargs):
 	If zone value is passed, then it only loops through that custom list of zones
 	"""
 	
+	clear_cache_flag = False
+	
 	if not zones:
 		zones = Zone.objects.all()
 		site_id = getattr(settings, "SITE_ID", None)
@@ -22,7 +24,7 @@ def dart_sync(zones=None, debug_mode=False, *args, **kwargs):
 			zones = zones.filter(site__site=site_id)
 
 	for zone in zones:
-		positions = zone.zone_position_set.all()
+		positions = zone.zone_position_set.filter(sync=True)
 		for position in positions:
 		
 			size = position.position.size_list_string
@@ -55,13 +57,21 @@ def dart_sync(zones=None, debug_mode=False, *args, **kwargs):
 		
 						# if dart returns a blank image or document.write("");, there is no ad available, update its status
 						#if settings.DEBUG: print response
+						
+						previous_enabled = position.enabled
+						
 						if re.search(r"grey\.gif", response) or response.strip() == "document.write('');":
 							position.enabled = False
 							if debug_mode: print "Position: disabled"
 						else:
 							position.enabled = True
 							if debug_mode: print "Position: enabled"
-						position.save()
+
+						# check if the value has changed
+						if previous_enabled != position.enabled:
+							position.save()
+							clear_cache_flag = True
+							
 	return True
 				
 def dart_request(url, user_agent=DEFAULT_BROWSER_AGENT, domain=DART_DOMAIN, *args, **kwargs):
