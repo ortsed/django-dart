@@ -2,6 +2,7 @@ import httplib, re
 from django.conf import settings
 from dart.models import Site, Zone, DART_DOMAIN, Ad_Page
 import settings
+from django.core.cache import cache
 
 # String used to define a browser when making DART requests from a commandline
 DEFAULT_BROWSER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"
@@ -19,9 +20,6 @@ def dart_sync(zones=None, debug_mode=False, *args, **kwargs):
 	
 	if not zones:
 		zones = Zone.objects.all()
-		#site_id = getattr(settings, "SITE_ID", None)
-		#if site_id:
-		#	zones = zones.filter(site__site=site_id)
 
 	for zone in zones:
 		positions = zone.zone_position_set.filter(sync=True)
@@ -72,8 +70,11 @@ def dart_sync(zones=None, debug_mode=False, *args, **kwargs):
 						if previous_enabled != position.enabled:
 							position.save()
 							clear_cache_flag = True
-							
+	if clear_cache_flag:
+		cache.clear()
+	
 	return True
+	
 				
 def dart_request(url, user_agent=DEFAULT_BROWSER_AGENT, domain=DART_DOMAIN, *args, **kwargs):
 	""" 
