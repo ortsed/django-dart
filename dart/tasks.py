@@ -8,7 +8,7 @@ from django.core.cache import cache
 DEFAULT_BROWSER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.7; rv:8.0.1) Gecko/20100101 Firefox/8.0.1"
 
 
-def dart_sync(zones=None, debug_mode=False, *args, **kwargs):
+def dart_sync(zones=None, debug_mode=False, clear_cache_command="", *args, **kwargs):
 	""" 
 	Loops through all zones and positions and get's their status in doubleclick
 	then updates the local database with the result.
@@ -70,8 +70,9 @@ def dart_sync(zones=None, debug_mode=False, *args, **kwargs):
 						if previous_enabled != position.enabled:
 							position.save()
 							clear_cache_flag = True
-	if clear_cache_flag:
-		cache.clear()
+
+	if clear_cache_command and clear_cache_flag:
+		exec clear_cache_command
 	
 	return True
 	
