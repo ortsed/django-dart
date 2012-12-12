@@ -73,12 +73,13 @@ def _dart_sync_zone_position(zone, position, debug_mode, clear_cache_command, *a
 					position.enabled = True
 				else:
 					position.enabled = False
-					# check if the value has changed
-					if previous_enabled != position.enabled:
-						position.save()
-						clear_cache_flag = True
-					else:
-						clear_cache_flag = False
+
+				# check if the value has changed
+				if previous_enabled != position.enabled:
+					position.save()
+					clear_cache_flag = True
+				else:
+					clear_cache_flag = False
 						
 	return clear_cache_flag
 	
