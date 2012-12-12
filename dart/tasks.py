@@ -53,30 +53,35 @@ def dart_sync(zones=None, debug_mode=False, clear_cache_command="", *args, **kwa
 					#if settings.DEBUG: print u"Status:%s" % res.status
 					if res.status == 200:
 						response = res.read()
-		
-						# if dart returns a blank image or document.write("");, there is no ad available, update its status
-						#if settings.DEBUG: print response
+						clear_cache_flag = dart_has_ad(position, response, debug_mode)
 						
-						previous_enabled = position.enabled
-						
-						if re.search(r"grey\.gif", response) or response.strip() == "document.write('');":
-							position.enabled = False
-							if debug_mode: print "Position: disabled"
-						else:
-							position.enabled = True
-							if debug_mode: print "Position: enabled"
-
-						# check if the value has changed
-						if previous_enabled != position.enabled:
-							position.save()
-							clear_cache_flag = True
 
 	if clear_cache_command and clear_cache_flag:
 		exec clear_cache_command
 	
 	return True
 	
-				
+def dart_has_ad(position, response, debug_mode, *args, **kwargs):
+	# if dart returns a blank image or document.write("");, there is no ad available, update its status
+	#if settings.DEBUG: print response
+	
+	previous_enabled = position.enabled
+	
+	if re.search(r"grey\.gif", response) or response.strip() == "document.write('');":
+		position.enabled = False
+		if debug_mode: print "Position: disabled"
+	else:
+		position.enabled = True
+		if debug_mode: print "Position: enabled"
+
+	# check if the value has changed
+	if previous_enabled != position.enabled:
+		position.save()
+		return True
+	else:
+		return False
+		
+		
 def dart_request(url, user_agent=DEFAULT_BROWSER_AGENT, domain=DART_DOMAIN, *args, **kwargs):
 	""" 
 	Makes a single HTTP request of a DART tag to DART 
